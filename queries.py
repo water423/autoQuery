@@ -1,7 +1,7 @@
 import requests
 import logging
 import time
-from .utils import *
+from utils import *
 
 logger = logging.getLogger("auto-queries")
 datestr = time.strftime("%Y-%m-%d", time.localtime())
@@ -558,8 +558,10 @@ class Query:
                 f"faild to query admin travel with status_code: {r.status_code}")
         return
 
+
     # 最终的订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
-    def preserve(self, start: str, end: str, trip_ids: List = [], is_high_speed: bool = True, date: str = "", headers: dict = {}):
+    def preserve(self, start: str, end: str, trip_ids: List = [], is_high_speed: bool = True, date: str = "",
+                 headers: dict = {}):
         if date == "":
             date = datestr
 
@@ -593,7 +595,7 @@ class Query:
 
         need_assurance = True
         if need_assurance:
-            assurance_result = self.query_food()    # 虽然只有一种assurance但是此处调用查询一下使得调用链丰富
+            assurance_result = self.query_food()  # 虽然只有一种assurance但是此处调用查询一下使得调用链丰富
             assurance_dict = random_from_list(assurance_result)
             base_preserve_payload["assurance"] = 1
 
@@ -628,3 +630,63 @@ class Query:
             logger.error(
                 f"preserve failed, code: {res.status_code}, {res.text}")
         return
+
+
+    # 以下三个函数分别通过三种信息查询consign
+    def query_by_account_id(self, account_id, headers: dict = {}):
+        url = f"{self.address}/api/v1/consignservice/consigns/account/{account_id}"
+        r = self.session.get(url=url, headers=headers)
+        if r.status_code == 200 and r.json()["status"] == 1:
+            logger.info("success to query consign")
+            res_data = r.json()["data"]
+            return res_data
+        else:
+            logger.warning(
+                f"faild to query consign with status_code: {r.status_code}")
+
+    def query_by_order_id(self, order_id, headers: dict = {}):
+        url = f"{self.address}/api/v1/consignservice/consigns/order/{order_id}"
+        r = self.session.get(url=url, headers=headers)
+        if r.status_code == 200 and r.json()["status"] == 1:
+            logger.info("success to query consign")
+            res_data = r.json()["data"]
+            return res_data
+        else:
+            logger.warning(
+                f"faild to query consign with status_code: {r.status_code}")
+
+
+    def query_by_consignee(self, consignee, headers: dict = {}):
+        url = f"{self.address}/api/v1/consignservice/consigns/{consignee}"
+        r = self.session.get(url=url, headers=headers)
+        if r.status_code == 200 and r.json()["status"] == 1:
+            logger.info("success to query consign")
+            res_data = r.json()["data"]
+            return res_data
+        else:
+            logger.warning(
+                f"faild to query consign with status_code: {r.status_code}")
+
+    # 计算如果退票的情况下退款额度
+    def cancel_refound_calculate(self, order_id, headers: dict = {}):
+        # 计算扣款
+        refound_url = f"{self.address}/api/v1/cancelservice/cancel/refound/{order_id}"
+        res_refound = self.session.get(url=refound_url, headers=headers)
+        if res_refound.status_code == 200 and res_refound.json()["status"] == 1:
+            logger.info("success to query refound data")
+
+        else:
+            logger.warning(
+                f"faild to query admin travel with status_code: {res_refound.status_code}")
+            return
+        res_data = res_refound.json()["data"]
+        refound = str_to_float(res_data)
+        if refound == None:
+            logger.error("convert refound string to float failed")
+            return
+        return refound
+
+
+
+
+

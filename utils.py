@@ -37,3 +37,9 @@ def random_str():
 
 def random_phone():
     ''.join(random.choices(string.digits, k=random.randint(8, 15)))
+
+def str_to_float(fp_str):
+    try:
+        return float(fp_str)
+    except:
+        None
