@@ -5,6 +5,14 @@ from utils import *
 
 logger = logging.getLogger("auto-queries")
 datestr = time.strftime("%Y-%m-%d", time.localtime())
+place_pairs_origin = [("Shang Hai", "Su Zhou"),  # place_pairs （起始地，目的地）对，设立三个待选
+               ("Su Zhou", "Shang Hai"),
+               ("Nan Jing", "Shang Hai"),
+               ("Nan Jing", "Hang Zhou"),
+               ("Shang Hai", "Wu Han"),
+               ("Guang Zhou", "Chang Sha"),
+               ("Shen Zhen", "Guang Zhou"),
+               ]
 
 
 class Query:
@@ -74,11 +82,18 @@ class Query:
         :return: TripId 列表
         """
 
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/travelservice/trips/left"   # 请求url（travelservice）
-        place_pairs = [("Shang Hai", "Su Zhou"),    # place_pairs （起始地，目的地）对，设立三个待选
+        place_pairs = [("Shang Hai", "Su Zhou"),    # place_pairs （起始地，目的地）对，设立多个待选
                        ("Su Zhou", "Shang Hai"),
-                       ("Nan Jing", "Shang Hai")]
+                       ("Nan Jing", "Shang Hai"),
+                       ("Nan Jing", "Hang Zhou"),
+                       ("Shang Hai", "Wu Han"),
+                       ("Guang Zhou", "Chang Sha"),
+                       ("Shen Zhen", "Guang Zhou"),
+                       ]
 
         if place_pair == ():                        # 从待选中随机选择一个作为此次请求的起始地和目的地
             place_pair = random.choice(place_pairs)
@@ -111,6 +126,8 @@ class Query:
 
     # 查询普通票
     def query_normal_ticket(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[str]:
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/travel2service/trips/left"  # 请求url(travel2service)
         place_pairs = [("Shang Hai", "Nan Jing"),
@@ -152,6 +169,8 @@ class Query:
         :param headers: 请求头
         :return: TripId 列表
         """
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/travelservice/trips/left_parallel"  # 请求url(travelservice left_parallel)
         place_pairs = [("Shang Hai", "Su Zhou"),
@@ -193,6 +212,8 @@ class Query:
         高级查询
         :param type [cheapest, quickest, minStation]
         """
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/travelplanservice/travelPlan/{type}"  # 请求url（travelplanservice/travelPlan/{type}）
         place_pairs = [("Shang Hai", "Su Zhou"),
@@ -229,6 +250,8 @@ class Query:
 
     # 查询保险服务（只有一种保险服务）
     def query_assurances(self, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/assuranceservice/assurances/types"  # 请求url（assuranceservice/assurances/types）
 
@@ -238,14 +261,20 @@ class Query:
             logger.warning(
                 f"query assurance failed, response data is {response.text}")
             return None
-        _ = response.json().get("data")
+        assurance_data = response.json().get("data")
         # assurance只有一种
 
-        return [{"assurance": "1"}]
+        return assurance_data
 
     # 查询食物服务（设定"Shang Hai", "Su Zhou" D1345 2021-07-14）
-    def query_food(self, place_pair: tuple = ("Shang Hai", "Su Zhou"), train_num: str = "D1345", headers: dict = {}):
+    def query_food(self, place_pair: tuple = (), train_num: str = "D1345", headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
+        #  随机选择一个pair地点
+        if place_pair == ():
+            place_pair = random.choice(place_pairs_origin)
+
         url = f"{self.address}/api/v1/foodservice/foods/2021-07-14/{place_pair[0]}/{place_pair[1]}/{train_num}"
 
         # 发送请求、获取响应并处理
@@ -254,24 +283,20 @@ class Query:
             logger.warning(
                 f"query food failed, response data is {response.text}")
             return None
-        _ = response.json().get("data")
+        res_food_data = response.json().get("data")
 
         # food 是什么不会对后续调用链有影响，因此查询后返回一个固定数值
-        return [{
-            "foodName": "Soup",
-            "foodPrice": 3.7,
-            "foodType": 2,
-            "stationName": "Su Zhou",
-            "storeName": "Roman Holiday"
-        }]
+        return res_food_data
 
     # 查询支付方式
     def query_contacts(self, headers: dict = {}) -> List[str]:
         """
-        返回座位id列表
+        返回联系人信息列表
         :param headers:
         :return: id list
         """
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/contactservice/contacts/account/{self.uid}"
 
@@ -286,9 +311,9 @@ class Query:
         # print("contacts")
         # pprint(data)
 
-        ids = [d.get("id") for d in data if d.get("id") != None]
+        # ids = [d.get("id") for d in data if d.get("id") != None]
         # pprint(ids)
-        return ids
+        return data
 
     # 获取当前用户的所有订单的id相关信息（false）
     def query_orders(self, types: tuple = tuple([0, 1]), query_other: bool = False, headers: dict = {}) -> List[tuple]:
@@ -297,6 +322,8 @@ class Query:
         :param headers:
         :return:
         """
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容（queryOther决定）
         url = ""
 
@@ -342,6 +369,8 @@ class Query:
         :param headers:
         :return:
         """
+        if headers == {}:
+            headers = self.session.headers
 
         if query_other:
             url = f"{self.address}/api/v1/orderOtherService/orderOther/refresh"
@@ -376,6 +405,8 @@ class Query:
 
     # 使用寄送服务（请求固定值，返回新生成的订单ID）
     def put_consign(self, result, headers: dict = {}) -> str:
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/consignservice/consigns"  # 请求url consignservice/consigns
         consignload = {
@@ -407,6 +438,8 @@ class Query:
 
     # 查询route(routeService)（请求固定值）
     def query_route(self, routeId: str = '92708982-77af-4318-be25-57ccb0ff69ad', headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/routeservice/routes/{routeId}"  # 请求url(routeservice/routes/{routeId})
 
@@ -423,6 +456,8 @@ class Query:
 
     # 支付订单（输入订单id、trip id，返回已支付的订单id）
     def pay_order(self, order_id: str, trip_id: str, headers: dict = {}) -> str:
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/inside_pay_service/inside_payment"  # 请求url(inside_pay_service/inside_payment)
         payload = {
@@ -444,6 +479,8 @@ class Query:
 
     # 取消订单（输入订单id 返回已被取消的订单id）
     def cancel_order(self, order_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/cancelservice/cancel/{order_id}/{self.uid}"
         # 请求url（cancelservice/cancel/{order_id}/{self.uid}）
@@ -461,6 +498,8 @@ class Query:
 
     # 取票服务（输入订单id）
     def collect_order(self, order_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/executeservice/execute/collected/{order_id}"
         # 请求url(executeservice/execute/collected/{order_id})
@@ -477,6 +516,8 @@ class Query:
 
     # 进站（输入订单id）
     def enter_station(self, order_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/executeservice/execute/execute/{order_id}"
         # executeservice/execute/execute/{order_id}
@@ -503,6 +544,8 @@ class Query:
 
     # admin面板中basic组件中的price查询
     def query_admin_basic_price(self, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         url = f"{self.address}/api/v1/adminbasicservice/adminbasic/prices"
         response = self.session.get(url=url, headers=headers)
 
@@ -515,6 +558,8 @@ class Query:
 
     # admin面板中basic组件中的config查询
     def query_admin_basic_config(self, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         url = f"{self.address}/api/v1/adminbasicservice/adminbasic/configs"
         response = self.session.get(url=url, headers=headers)
         if response.status_code == 200:
@@ -526,6 +571,8 @@ class Query:
 
     # 改签服务
     def rebook_ticket(self, old_order_id, old_trip_id, new_trip_id, new_date, new_seat_type, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/rebookservice/rebook"  # 请求url(rebookservice/rebook)
 
@@ -548,6 +595,8 @@ class Query:
 
     # admin面板中travel组件
     def query_admin_travel(self, headers: dict = {}):   # 跑不通
+        if headers == {}:
+            headers = self.session.headers
         url = f"{self.address}/api/v1/admintravelservice/admintravel"
 
         r = self.session.get(url=url, headers=headers)
@@ -562,6 +611,8 @@ class Query:
     # 最终的订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
     def preserve(self, start: str, end: str, trip_ids: List = [], is_high_speed: bool = True, date: str = "",
                  headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         if date == "":
             date = datestr
 
@@ -634,6 +685,8 @@ class Query:
 
     # 以下三个函数分别通过三种信息查询consign
     def query_by_account_id(self, account_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/account/{account_id}"
         r = self.session.get(url=url, headers=headers)
         if r.status_code == 200 and r.json()["status"] == 1:
@@ -645,6 +698,8 @@ class Query:
                 f"faild to query consign with status_code: {r.status_code}")
 
     def query_by_order_id(self, order_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/order/{order_id}"
         r = self.session.get(url=url, headers=headers)
         if r.status_code == 200 and r.json()["status"] == 1:
@@ -657,6 +712,8 @@ class Query:
 
 
     def query_by_consignee(self, consignee, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/{consignee}"
         r = self.session.get(url=url, headers=headers)
         if r.status_code == 200 and r.json()["status"] == 1:
@@ -669,6 +726,8 @@ class Query:
 
     # 计算如果退票的情况下退款额度
     def cancel_refound_calculate(self, order_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
         # 计算扣款
         refound_url = f"{self.address}/api/v1/cancelservice/cancel/refound/{order_id}"
         res_refound = self.session.get(url=refound_url, headers=headers)
