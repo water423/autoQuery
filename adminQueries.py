@@ -664,7 +664,7 @@ class AdminQuery(Query):
         url = f"{self.address}/api/v1/adminrouteservice/adminroute"
 
         # 发送请求、获取响应并出路
-        response = self.session.post(url=url, headers=headers)
+        response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
             logger.warning(f"request for {url} failed. response data is {response.text}")
@@ -701,6 +701,7 @@ class AdminQuery(Query):
             logger.warning(f"request for {url} failed. response data is {response.text}")
             return None
         logger.info(f"route add success for!")
+        return response.json()["data"]
 
     def admin_delete_route(
             self,
@@ -769,6 +770,7 @@ class AdminQuery(Query):
             logger.warning(f"request for {url} failed. response data is {response.text}")
             return None
         logger.info(f"travel add success for {username}!")
+        return response.json()["data"]
 
     def admin_update_user(
             self,
