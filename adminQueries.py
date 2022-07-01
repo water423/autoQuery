@@ -173,7 +173,7 @@ class AdminQuery(Query):
             return None
 
         # 返回值为null（{"status":1,"msg":"Create Success","data":null}）
-        return
+        return response.json()["data"]
 
     def contacts_get(self, headers: dict = {}) -> str:
         """
@@ -871,6 +871,7 @@ class AdminQuery(Query):
             logger.warning(f"request for {url} failed. response data is {response.text}")
             return None
         logger.info(f"travel add success for {trip_id}!")
+        return response.json()["data"]
 
     def admin_update_travel(
             self,
