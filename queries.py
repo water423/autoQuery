@@ -74,7 +74,7 @@ class Query:
 
     # 请求服务相关方法
     # 查询高铁动车票
-    def query_high_speed_ticket(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[str]:
+    def query_high_speed_ticket(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[dict]:
         """
         返回TripId 列表
         :param place_pair: 使用的开始结束组对
@@ -115,17 +115,19 @@ class Query:
                 f"request for {url} failed. response data is {response.text}")
             return None
 
-        data = response.json().get("data")  # type: dict                         # 响应正常则获取内容（字典集）
+        data = response.json().get("data")                           # 响应正常则获取内容（字典集）
+        print(data)
 
-        trip_ids = []
-        for d in data:
-            trip_id = d.get("tripId").get("type") + \
-                d.get("tripId").get("number")
-            trip_ids.append(trip_id)
-        return trip_ids
+        # trip_ids = []
+        # for d in data:
+        #     trip_id = d.get("tripId").get("type") + \
+        #         d.get("tripId").get("number")
+        #     trip_ids.append(trip_id)
+        # return trip_ids
+        return data
 
     # 查询普通票
-    def query_normal_ticket(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[str]:
+    def query_normal_ticket(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[dict]:
         if headers == {}:
             headers = self.session.headers
         # 准备请求内容
@@ -153,16 +155,18 @@ class Query:
                 f"request for {url} failed. response data is {response.text}")
             return None
 
-        data = response.json().get("data")  # type: dict                        # 响应正确
+        data = response.json().get("data")                     # 响应正确
+        print(data)
 
-        trip_ids = []
-        for d in data:
-            trip_id = d.get("tripId").get("type") + \
-                d.get("tripId").get("number")
-            trip_ids.append(trip_id)
-        return trip_ids
+        # trip_ids = []
+        # for d in data:
+        #     trip_id = d.get("tripId").get("type") + \
+        #         d.get("tripId").get("number")
+        #     trip_ids.append(trip_id)
+        # return trip_ids
+        return data
 
-    def query_high_speed_ticket_parallel(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[str]:
+    def query_high_speed_ticket_parallel(self, place_pair: tuple = (), time: str = "", headers: dict = {}) -> List[dict]:
         """
         返回TripId 列表
         :param place_pair: 使用的开始结束组对
@@ -197,17 +201,20 @@ class Query:
                 f"request for {url} failed. response data is {response.text}")
             return None
 
-        data = response.json().get("data")  # type: dict                        # 响应正确
+        data = response.json().get("data")                          # 响应正确
+        print(data)
 
-        trip_ids = []
-        for d in data:
-            trip_id = d.get("tripId").get("type") + \
-                d.get("tripId").get("number")
-            trip_ids.append(trip_id)
-        return trip_ids
+        # trip_ids = []
+        # for d in data:
+        #     trip_id = d.get("tripId").get("type") + \
+        #         d.get("tripId").get("number")
+        #     trip_ids.append(trip_id)
+        # return trip_ids
+        return data
 
     # 高级查询（最便宜、最快、最少经过站）
-    def query_advanced_ticket(self, place_pair: tuple = (), type: str = "cheapest", date: str = "", headers: dict = {}) -> List[str]:
+    def query_advanced_ticket(self, place_pair: tuple = (), type: str = "cheapest", date: str = "",
+                              headers: dict = {}) -> List[dict]:
         """
         高级查询
         :param type [cheapest, quickest, minStation]
@@ -241,12 +248,14 @@ class Query:
             return None
 
         data = response.json().get("data")                                      # 响应正确
+        print(data)
 
-        trip_ids = []
-        for d in data:
-            trip_id = d.get("tripId")
-            trip_ids.append(trip_id)
-        return trip_ids
+        # trip_ids = []
+        # for d in data:
+        #     trip_id = d.get("tripId")
+        #     trip_ids.append(trip_id)
+        # return trip_ids
+        return data
 
     # 查询保险服务（只有一种保险服务）
     def query_assurances(self, headers: dict = {}):
@@ -288,7 +297,7 @@ class Query:
         # food 是什么不会对后续调用链有影响，因此查询后返回一个固定数值
         return res_food_data
 
-    # 查询支付方式
+    # 查询联系人
     def query_contacts(self, headers: dict = {}) -> List[str]:
         """
         返回联系人信息列表
@@ -314,6 +323,36 @@ class Query:
         # ids = [d.get("id") for d in data if d.get("id") != None]
         # pprint(ids)
         return data
+
+    # 新建联系人
+    def add_contact(self, name: str = "Contacts_new",
+                    document_type: int = 1, document_number: str = "new",
+                    phone_number: str="new", headers: dict = {}) -> str:
+        if headers == {}:
+            headers = self.session.headers
+        # 请求url
+        url = f"{self.address}/api/v1/contactservice/contacts"
+
+        # 请求载荷，对应@requestbody注解
+        payload = {
+            "name": name,
+            "accountId": self.uid,
+            "documentType": document_type,
+            "documentNumber": document_number,
+            "phoneNumber": phone_number
+        }
+
+        # 发送请求、获取响应
+        # 重复添加contact会报错此contact已存在
+        response = self.session.post(url=url, headers=headers, json=payload)
+
+        if response.status_code != 201 or response.json().get("data") is None:  # 注意此请求的返回为201 OK
+            logger.warning(f"request for {url} failed. response data is {response.text}")
+            return None
+
+        data = response.json().get("data")
+        contact_id = data.get("id")
+        return contact_id
 
     # 获取当前用户的所有订单的id相关信息（false）
     def query_orders(self, types: tuple = tuple([0, 1]), query_other: bool = False, headers: dict = {}) -> List[tuple]:
@@ -533,41 +572,14 @@ class Query:
         return order_id
 
     # 查询票务高级检索（3种）
-    def query_cheapest(self, date="", headers: dict = {}):
-        self.query_advanced_ticket(type="cheapest", date=date)
+    def query_cheapest(self, place_pair: tuple = (), date="", headers: dict = {}):
+        self.query_advanced_ticket(place_pair=place_pair, type="cheapest", date=date)
 
-    def query_min_station(self, date="", headers: dict = {}):
-        self.query_advanced_ticket(type="minStation", date=date)
+    def query_min_station(self, place_pair: tuple = (), date="", headers: dict = {}):
+        self.query_advanced_ticket(place_pair=place_pair,type="minStation", date=date)
 
-    def query_quickest(self, date="", headers: dict = {}):
-        self.query_advanced_ticket(type="quickest", date=date)
-
-    # admin面板中basic组件中的price查询
-    def query_admin_basic_price(self, headers: dict = {}):
-        if headers == {}:
-            headers = self.session.headers
-        url = f"{self.address}/api/v1/adminbasicservice/adminbasic/prices"
-        response = self.session.get(url=url, headers=headers)
-
-        if response.status_code == 200:
-            logger.info(f"query price success")
-            return response
-        else:
-            logger.warning(f"query price failed")
-            return None
-
-    # admin面板中basic组件中的config查询
-    def query_admin_basic_config(self, headers: dict = {}):
-        if headers == {}:
-            headers = self.session.headers
-        url = f"{self.address}/api/v1/adminbasicservice/adminbasic/configs"
-        response = self.session.get(url=url, headers=headers)
-        if response.status_code == 200:
-            logger.info(f"config success")
-            return response
-        else:
-            logger.warning(f"config failed")
-            return None
+    def query_quickest(self, place_pair: tuple = (), date="", headers: dict = {}):
+        self.query_advanced_ticket(place_pair=place_pair,type="quickest", date=date)
 
     # 改签服务
     def rebook_ticket(self, old_order_id, old_trip_id, new_trip_id, new_date, new_seat_type, headers: dict = {}):
@@ -593,33 +605,29 @@ class Query:
 
         return
 
-    # admin面板中travel组件
-    def query_admin_travel(self, headers: dict = {}):   # 跑不通
-        if headers == {}:
-            headers = self.session.headers
-        url = f"{self.address}/api/v1/admintravelservice/admintravel"
-
-        r = self.session.get(url=url, headers=headers)
-        if r.status_code == 200 and r.json()["status"] == 1:
-            logger.info("success to query admin travel")
-        else:
-            logger.warning(
-                f"faild to query admin travel with status_code: {r.status_code}")
-        return
-
-
-    # 最终的订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
-    def preserve(self, start: str, end: str, trip_ids: List = [], is_high_speed: bool = True, date: str = "",
-                 headers: dict = {}):
+    # 订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
+    # query查询到trip信息随机选择一个trip并传入此函数，则通过train_type就可以判断是否是高铁动车票，date与查询日期一致
+    def preserve(self, trip_info: dict, date: str = "", headers: dict = {}):
+        # start: str, end: str, trip_ids: List = [], is_high_speed: bool = True
         if headers == {}:
             headers = self.session.headers
         if date == "":
             date = datestr
 
-        if is_high_speed:
-            PRESERVE_URL = f"{self.address}/api/v1/preserveservice/preserve"
-        else:
-            PRESERVE_URL = f"{self.address}/api/v1/preserveotherservice/preserveOther"
+        # {'tripId': {'type': 'D', 'number': '1345'},
+        #  'trainTypeId': 'DongCheOne', 'startingStation': 'Shang Hai', 'terminalStation': 'Su Zhou',
+        #  'startingTime': 1367622000000, 'endTime': 1367622960000,
+        #  'economyClass': 1073741822, 'confortClass': 1073741822,
+        #  'priceForEconomyClass': '22.5', 'priceForConfortClass': '50.0'}
+        # 解析trip_info得到start end tripId等信息
+        start = trip_info.get("startingStation")
+        end = trip_info.get("terminalStation")
+        trip_id = trip_info.get("tripId")   # {'type': 'D', 'number': '1345'}
+
+        if trip_id.get("type") == 'D' or trip_id.get("type") == 'G':  # 以D或者G开头的是preserve
+            preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
+        else:                          # 以K或者Z开头的是preserveOther
+            preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
 
         base_preserve_payload = {
             "accountId": self.uid,
@@ -628,37 +636,51 @@ class Query:
             "date": date,
             "from": start,
             "to": end,
-            "tripId": ""
+            "tripId": trip_id.get("type") + trip_id.get("number")  # 合并
         }
 
-        trip_id = random_from_list(trip_ids)
-        base_preserve_payload["tripId"] = trip_id
+        # 选择座位
+        seat_type = random_from_list(["2", "3"])
+        base_preserve_payload["seatType"] = seat_type
 
-        need_food = True  # random_boolean()在进行单链trace数据构造时，默认需要食物
+        # 选择联系人：必选项
+        # 两种选择方式：新建联系人 or 选择已有联系人
+        # 随机选择是否需要新建联系人
+        new_contact = random_boolean()
+        if new_contact:
+            # 新建一个联系人，在前端逻辑中新建联系人 -> 获取所有联系人 -> 根据ui选择联系人
+            # 为了可复用性，如果新增联系人则后续需要删掉（或者保证每次的新增均不相同）
+            logger.info("choose new contact")
+            contacts_id = self.add_contact()  # 新增联系人并返回contactId
+            base_preserve_payload["contactsId"] = contacts_id
+        else:
+            logger.info("choose contact already existed")
+            contacts_result = self.query_contacts()
+            contacts_id = random_from_list(contacts_result).get("id")  # 需要获取id属性为联系人的id
+            base_preserve_payload["contactsId"] = contacts_id
+
+        # 随机选择是否需要食物
+        # need_food = random_boolean()
+        need_food = False  # 获取food接口有问题
         if need_food:
             logger.info("need food")
-            food_result = self.query_food()
+            # 查询食物的参数为 place_pair train_num即tripID
+            food_result = self.query_food(place_pair=(start, end), train_num =trip_id)
             food_dict = random_from_list(food_result)
             base_preserve_payload.update(food_dict)
         else:
             logger.info("not need food")
             base_preserve_payload["foodType"] = "0"
 
-        need_assurance = True
-        if need_assurance:
-            assurance_result = self.query_food()  # 虽然只有一种assurance但是此处调用查询一下使得调用链丰富
-            assurance_dict = random_from_list(assurance_result)
+        # 随机选择是否需要保险
+        need_assurance = random_boolean()
+        if need_assurance:  # 如果需要保险则查询保险并使得assurance参数为1，否则默认为0
+            assurance_result = self.query_food()  # 系统内置只有一种assurance
+            # assurance_dict = random_from_list(assurance_result)
             base_preserve_payload["assurance"] = 1
 
-        contacts_result = self.query_contacts()
-        contacts_id = random_from_list(contacts_result)
-        base_preserve_payload["contactsId"] = contacts_id
-
-        # 高铁 2-3
-        seat_type = random_from_list(["2", "3"])
-        base_preserve_payload["seatType"] = seat_type
-
-        need_consign = True
+        # 随机选择此时需不需要托运
+        need_consign = random_boolean()
         if need_consign:
             consign = {
                 "consigneeName": random_str(),
@@ -669,9 +691,17 @@ class Query:
             base_preserve_payload.update(consign)
 
         logger.info(
-            f"choices: preserve_high: {is_high_speed} need_food:{need_food}  need_consign: {need_consign}  need_assurance:{need_assurance}")
+            f"[preserve choices] tripId:{trip_id}  "
+            f"new_contact:{new_contact} need_food:{need_food}  "
+            f"need_consign: {need_consign}  need_assurance:{need_assurance}")
 
-        res = self.session.post(url=PRESERVE_URL,
+        print("[preserve choices] tripId:"+trip_id.get("type") + trip_id.get("number") )
+        print(new_contact)
+        print(need_food)
+        print(need_consign)
+        print(need_assurance)
+
+        res = self.session.post(url=preserve_url,
                                 headers=headers,
                                 json=base_preserve_payload)
 
@@ -680,8 +710,14 @@ class Query:
         else:
             logger.error(
                 f"preserve failed, code: {res.status_code}, {res.text}")
-        return
 
+        # 最后删除新建的联系人，保证可复用性
+        if new_contact:
+            self.login("admin", "222222")
+            contacts_delete = getattr(self, 'contacts_delete')
+            contacts_delete(contact_id=contacts_id)
+
+        return
 
     # 以下三个函数分别通过三种信息查询consign
     def query_by_account_id(self, account_id, headers: dict = {}):
