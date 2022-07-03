@@ -221,12 +221,12 @@ def query_left_tickets_successfully(query_type: str = "normal", place_pair: tupl
         all_trip_info = query.query_normal_ticket(place_pair=place_pair)
     if query_type == "high_speed":
         all_trip_info = query.query_high_speed_ticket(place_pair=place_pair)
-    # if query_type == "cheapest":
-    #     query.query_cheapest(place_pair=place_pair)
-    # if query_type == "min_station":
-    #     query.query_min_station(place_pair=place_pair)
-    # if query_type == "quickest":
-    #     query.query_quickest(place_pair=place_pair)
+    if query_type == "cheapest":
+        all_trip_info = query.query_cheapest(place_pair=place_pair)
+    if query_type == "min_station":
+        all_trip_info = query.query_min_station(place_pair=place_pair)
+    if query_type == "quickest":
+        all_trip_info = query.query_quickest(place_pair=place_pair)
     # 随机选择一个trip来返回，作为后续preserve的对象（输入）
     trip_info = random_from_list(all_trip_info)
     print(trip_info)
@@ -250,112 +250,6 @@ def query_left_tickets_unsuccessfully(query_type: str = "normal",
     if len(trip_info) == 0:
         logger.warning("query left tickets unsuccessfully : "
                        "no route found because of unknown start station or end station")
-
-# 订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
-    # query查询到trip信息随机选择一个trip并传入此函数，则通过train_type就可以判断是否是高铁动车票，date与查询日期一致
-    def preserve(self, trip_info: dict, date: str = "", headers: dict = {}):
-        # start: str, end: str, trip_ids: List = [], is_high_speed: bool = True
-        if headers == {}:
-            headers = self.session.headers
-        if date == "":
-            date = datestr
-
-        # {'tripId': {'type': 'D', 'number': '1345'},
-        #  'trainTypeId': 'DongCheOne', 'startingStation': 'Shang Hai', 'terminalStation': 'Su Zhou',
-        #  'startingTime': 1367622000000, 'endTime': 1367622960000,
-        #  'economyClass': 1073741822, 'confortClass': 1073741822,
-        #  'priceForEconomyClass': '22.5', 'priceForConfortClass': '50.0'}
-        # 解析trip_info得到start end tripId等信息
-        start = trip_info.get("startingStation")
-        end = trip_info.get("terminalStation")
-        trip_id = trip_info.get("tripId")   # {'type': 'D', 'number': '1345'}
-
-        if trip_id.get("type") == 'D' or trip_id.get("type") == 'G':  # 以D或者G开头的是preserve
-            preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
-        else:                          # 以K或者Z开头的是preserveOther
-            preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
-
-        base_preserve_payload = {
-            "accountId": self.uid,
-            "assurance": "0",
-            "contactsId": "",
-            "date": date,
-            "from": start,
-            "to": end,
-            "tripId": trip_id.get("type") + trip_id.get("number") # 合并
-        }
-
-        # 选择座位
-        seat_type = random_from_list(["2", "3"])
-        base_preserve_payload["seatType"] = seat_type
-
-        # 选择联系人：必选项
-        # 两种选择方式：新建联系人 or 选择已有联系人
-        # 随机选择是否需要新建联系人
-        new_contact = random_boolean()
-        if new_contact:
-            # 新建一个联系人，在前端逻辑中新建联系人 -> 获取所有联系人 -> 根据ui选择联系人
-            # 为了可复用性，如果新增联系人则后续需要删掉（或者保证每次的新增均不相同）
-            logger.info("choose new contact")
-            contacts_id = self.add_contact()  # 新增联系人并返回contactId
-            base_preserve_payload["contactsId"] = contacts_id
-        else:
-            logger.info("choose contact already existed")
-            contacts_result = self.query_contacts()
-            contacts_id = random_from_list(contacts_result)
-            base_preserve_payload["contactsId"] = contacts_id
-
-        # 随机选择是否需要食物
-        need_food = random_boolean()
-        if need_food:
-            logger.info("need food")
-            # 查询食物的参数为 place_pair train_num即tripID
-            food_result = self.query_food(place_pair=(start, end), train_num =trip_id)
-            food_dict = random_from_list(food_result)
-            base_preserve_payload.update(food_dict)
-        else:
-            logger.info("not need food")
-            base_preserve_payload["foodType"] = "0"
-
-        # 随机选择是否需要保险
-        need_assurance = random_boolean()
-        if need_assurance:  # 如果需要保险则查询保险并使得assurance参数为1，否则默认为0
-            assurance_result = self.query_food()  # 系统内置只有一种assurance
-            # assurance_dict = random_from_list(assurance_result)
-            base_preserve_payload["assurance"] = 1
-
-        # 随机选择此时需不需要托运
-        need_consign = random_boolean()
-        if need_consign:
-            consign = {
-                "consigneeName": random_str(),
-                "consigneePhone": random_phone(),
-                "consigneeWeight": random.randint(1, 10),
-                "handleDate": date
-            }
-            base_preserve_payload.update(consign)
-
-        logger.info(
-            f"[preserve choices] tripId:{trip_id}  "
-            f"new_contact:{new_contact} need_food:{need_food}  "
-            f"need_consign: {need_consign}  need_assurance:{need_assurance}")
-
-        res = self.session.post(url=preserve_url,
-                                headers=headers,
-                                json=base_preserve_payload)
-
-        if res.status_code == 200 and res.json()["data"] == "Success":
-            logger.info(f"preserve trip {trip_id} success")
-        else:
-            logger.error(
-                f"preserve failed, code: {res.status_code}, {res.text}")
-
-        # 最后删除新建的联系人，保证可复用性
-        if new_contact:
-            self.login("admin", "222222")
-            self.contacts_delete(contact_id=contacts_id)
-
-        return
 
 
 # 4.预定成功且刷新订单

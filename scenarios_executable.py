@@ -4,7 +4,10 @@ from scenario_component import *
 # 正常preserve流程
 # login -> 查询余票成功 -> 正常预定&refresh
 def preserve_successfully():
-    trip_info = query_left_tickets_successfully("high_speed", ("Shang Hai","Su Zhou"))
+    query_types = ["normal", "high_speed", "min_station", "cheapest", "quickest"]
+    query_type = random_from_list(query_types)
+    print(query_type)
+    trip_info = query_left_tickets_successfully("normal", ("Shang Hai","Nan Jing"))
     preserve_and_refresh(trip_info)
 
 

@@ -573,13 +573,13 @@ class Query:
 
     # 查询票务高级检索（3种）
     def query_cheapest(self, place_pair: tuple = (), date="", headers: dict = {}):
-        self.query_advanced_ticket(place_pair=place_pair, type="cheapest", date=date)
+        return self.query_advanced_ticket(place_pair=place_pair, type="cheapest", date=date)
 
     def query_min_station(self, place_pair: tuple = (), date="", headers: dict = {}):
-        self.query_advanced_ticket(place_pair=place_pair,type="minStation", date=date)
+        return self.query_advanced_ticket(place_pair=place_pair,type="minStation", date=date)
 
     def query_quickest(self, place_pair: tuple = (), date="", headers: dict = {}):
-        self.query_advanced_ticket(place_pair=place_pair,type="quickest", date=date)
+        return self.query_advanced_ticket(place_pair=place_pair,type="quickest", date=date)
 
     # 改签服务
     def rebook_ticket(self, old_order_id, old_trip_id, new_trip_id, new_date, new_seat_type, headers: dict = {}):
@@ -614,20 +614,34 @@ class Query:
         if date == "":
             date = datestr
 
+        # 普通查询和高级查询的返回值是不同的
         # {'tripId': {'type': 'D', 'number': '1345'},
         #  'trainTypeId': 'DongCheOne', 'startingStation': 'Shang Hai', 'terminalStation': 'Su Zhou',
         #  'startingTime': 1367622000000, 'endTime': 1367622960000,
         #  'economyClass': 1073741822, 'confortClass': 1073741822,
         #  'priceForEconomyClass': '22.5', 'priceForConfortClass': '50.0'}
+        # {'tripId': 'D1345', 'trainTypeId': 'DongCheOne', 'fromStationName': 'Shang Hai', 'toStationName': 'Su Zhou',
+        # 'stopStations': ['Shang Hai', 'Su Zhou'], 'priceForSecondClassSeat': '22.5',
+        # 'numberOfRestTicketSecondClass': 1073741815, 'priceForFirstClassSeat': '50.0',
+        # 'numberOfRestTicketFirstClass': 1073741815, 'startingTime': 1367622000000, 'endTime': 1367622960000}
         # 解析trip_info得到start end tripId等信息
-        start = trip_info.get("startingStation")
-        end = trip_info.get("terminalStation")
-        trip_id = trip_info.get("tripId")   # {'type': 'D', 'number': '1345'}
-
-        if trip_id.get("type") == 'D' or trip_id.get("type") == 'G':  # 以D或者G开头的是preserve
-            preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
-        else:                          # 以K或者Z开头的是preserveOther
-            preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
+        if type(trip_info.get("tripId")).__name__ == "dict":
+            start = trip_info.get("startingStation")
+            end = trip_info.get("terminalStation")
+            trip_id_info = trip_info.get("tripId")   # {'type': 'D', 'number': '1345'}
+            if trip_id_info.get("type") == 'D' or trip_id_info.get("type") == 'G':  # 以D或者G开头的是preserve
+                preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
+            else:  # 以K或者Z开头的是preserveOther
+                preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
+            trip_id = trip_id_info.get("type")+trip_id_info.get("number")
+        else:
+            start = trip_info.get("fromStationName")
+            end = trip_info.get("toStationName")
+            trip_id = trip_info.get("tripId")  # {'type': 'D', 'number': '1345'}
+            if trip_id[0] == 'D' or trip_id[0] == 'G':  # 以D或者G开头的是preserve
+                preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
+            else:  # 以K或者Z开头的是preserveOther
+                preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
 
         base_preserve_payload = {
             "accountId": self.uid,
@@ -636,7 +650,7 @@ class Query:
             "date": date,
             "from": start,
             "to": end,
-            "tripId": trip_id.get("type") + trip_id.get("number")  # 合并
+            "tripId": trip_id
         }
 
         # 选择座位
@@ -646,7 +660,8 @@ class Query:
         # 选择联系人：必选项
         # 两种选择方式：新建联系人 or 选择已有联系人
         # 随机选择是否需要新建联系人
-        new_contact = random_boolean()
+        # new_contact = random_boolean()
+        new_contact = False
         if new_contact:
             # 新建一个联系人，在前端逻辑中新建联系人 -> 获取所有联系人 -> 根据ui选择联系人
             # 为了可复用性，如果新增联系人则后续需要删掉（或者保证每次的新增均不相同）
@@ -695,7 +710,7 @@ class Query:
             f"new_contact:{new_contact} need_food:{need_food}  "
             f"need_consign: {need_consign}  need_assurance:{need_assurance}")
 
-        print("[preserve choices] tripId:"+trip_id.get("type") + trip_id.get("number") )
+        print("[preserve choices] tripId:"+trip_id)
         print(new_contact)
         print(need_food)
         print(need_consign)
@@ -712,10 +727,10 @@ class Query:
                 f"preserve failed, code: {res.status_code}, {res.text}")
 
         # 最后删除新建的联系人，保证可复用性
-        if new_contact:
-            self.login("admin", "222222")
-            contacts_delete = getattr(self, 'contacts_delete')
-            contacts_delete(contact_id=contacts_id)
+        # if new_contact:
+        #     self.login("admin", "222222")
+        #     contacts_delete = getattr(self, 'contacts_delete')
+        #     contacts_delete(contact_id=contacts_id)
 
         return
 
