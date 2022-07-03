@@ -4,6 +4,8 @@ class Constant:
     ts_address = "http://139.196.152.44:32677"
     admin_username = "admin"
     admin_pwd = "222222"
+    user_username = "fdse_microservice"
+    user_pwd = "111111"
 
 class InitData:
 
