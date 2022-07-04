@@ -234,32 +234,39 @@ def query_left_tickets_successfully(query_type: str = "normal", place_pair: tupl
 
 
 # 3.用户登陆并查询余票失败（没有station）
-# 输入一个不存在的起始站点或终止站点
+# 输入一个不存在的起始站点或终止站点(通过控制输入值来保证查不到travel)
 def query_left_tickets_unsuccessfully(query_type: str = "normal",
-                                      place_pair: tuple = ("start_station_fail","end_station_fail")):
+                                      place_pair: tuple = ("start_station_fail", "end_station_fail")):
     # 用户登陆
     query = Query(Constant.ts_address)
     query.login(Constant.user_username, Constant.user_pwd)
     # 查询余票(确定起始站、终点站以及列车类型)
     # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
-    trip_info = []  # 失败查询结果应该为null
+    all_trip_info = []
     if query_type == "normal":
-        trip_info = query.query_normal_ticket(place_pair=place_pair)
+        all_trip_info = query.query_normal_ticket(place_pair=place_pair)
     if query_type == "high_speed":
-        trip_info = query.query_high_speed_ticket(place_pair=place_pair)
-    if len(trip_info) == 0:
+        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair)
+    if query_type == "cheapest":
+        all_trip_info = query.query_cheapest(place_pair=place_pair)
+    if query_type == "min_station":
+        all_trip_info = query.query_min_station(place_pair=place_pair)
+    if query_type == "quickest":
+        all_trip_info = query.query_quickest(place_pair=place_pair)
+    if all_trip_info is None or len(all_trip_info) == 0:   # 如不存在则返回值为null或[]
         logger.warning("query left tickets unsuccessfully : "
                        "no route found because of unknown start station or end station")
+    else:
+        logger.warning("error : query left tickets successfully , Unsatisfied query conditions")
 
 
 # 4.预定成功且刷新订单
 # 输入 query对象，因为preserve的前提是登陆成功
 def preserve_and_refresh(trip_info: dict, date: str = ""):
-    # 用户登陆
-    query = Query(Constant.ts_address)
+    query = Query(Constant.ts_address)  # 用户登陆
     query.login(Constant.user_username, Constant.user_pwd)
-    query.preserve(trip_info=trip_info, date=date)
-    query.query_orders()  # refresh
+    query.preserve(trip_info=trip_info, date=date)  # 订票
+    query.query_orders()  # refresh刷新订单
 
 
 # if __name__ == '__main__':

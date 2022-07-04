@@ -24,10 +24,10 @@ class InitData:
         (station_list, distance_list, "fengtai", "chengdudong")
     ]
     train_types = [
-        "GaoTieOne","GaoTieTwo","DongCheOne","ZhiDa","TeKuai","KuaiSu","ManSu"
+        "GaoTieOne","GaoTieTwo","DongCheOne","ZhiDa","TeKuai","KuaiSu"
     ]
     init_train_trips_id = [
-        "G8001", "G8002", "D8003", "Z8004", "T8005", "K8006", "M8007"
+        "G8001", "G8002", "D8003", "Z8004", "T8005", "K8006"
     ]
     travel_start_time = "1367929200000"
 
