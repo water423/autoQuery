@@ -631,7 +631,7 @@ class Query:
             trip_id_info = trip_info.get("tripId")   # {'type': 'D', 'number': '1345'}
             if trip_id_info.get("type") == 'D' or trip_id_info.get("type") == 'G':  # 以D或者G开头的是preserve
                 preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
-            else:  # 以K或者Z开头的是preserveOther
+            else:  # else是preserveOther
                 preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
             trip_id = trip_id_info.get("type")+trip_id_info.get("number")
         else:
@@ -640,7 +640,7 @@ class Query:
             trip_id = trip_info.get("tripId")  # {'type': 'D', 'number': '1345'}
             if trip_id[0] == 'D' or trip_id[0] == 'G':  # 以D或者G开头的是preserve
                 preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
-            else:  # 以K或者Z开头的是preserveOther
+            else:  # else是preserveOther
                 preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
 
         base_preserve_payload = {
