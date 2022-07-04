@@ -2,25 +2,28 @@ from adminQueries import AdminQuery
 from constant import Constant, InitData, AdminData
 from queries import Query
 from utils import *
+import time
 import logging
 
 logger = logging.getLogger("data_init")
 highspeed_weights = {True: 60, False: 40}
+datestr = time.strftime("%Y-%m-%d", time.localtime())
 
+# 1.admin相关增删改查：post -> get -> update -> get -> delete
 def data_init():
     # 1. 添加新的站点、路线、车次
     # 2. 添加新的用户
-    #初始化管理员
+    # 初始化管理员
     admin_query = AdminQuery(Constant.ts_address)
     admin_query.login(Constant.admin_username, Constant.admin_pwd)
-    #初始化站点信息
+    # 初始化站点信息
     for station_data in InitData.init_stations_data:
         admin_query.stations_post(
             station_data[0],
             station_data[1],
             station_data[2]
         )
-    #初始化路线信息
+    # 初始化路线信息
     for route_data in InitData.init_route_data:
         route_id = admin_query.admin_add_route(
             route_data[0],
@@ -55,6 +58,7 @@ def data_init():
             contact["document_number"],
             contact["phone_number"]
         )
+
 
 def admin_operations():
     # 1. 添加新的站点、路线、车次
@@ -203,6 +207,66 @@ def admin_operations():
     admin_query.admin_get_all_travels()
     admin_query.admin_get_all_users()
 
+
+# 2.用户登陆并成功查询到余票(普通查询):输入起始站and终点站，以及查询类型
+# 查询类型： normal , high_speed , cheapest , min_station , quickest
+def query_left_tickets_successfully(query_type: str = "normal", place_pair: tuple = ()) -> dict:
+    # 用户登陆
+    query = Query(Constant.ts_address)
+    query.login(Constant.user_username, Constant.user_pwd)
+    # 查询余票(确定起始站、终点站以及列车类型)
+    # 类型：普通票、高铁票、高级查询（最快、最少站、最便宜）
+    all_trip_info = []  # 成功查询的结果
+    if query_type == "normal":
+        all_trip_info = query.query_normal_ticket(place_pair=place_pair)
+    if query_type == "high_speed":
+        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair)
+    if query_type == "cheapest":
+        all_trip_info = query.query_cheapest(place_pair=place_pair)
+    if query_type == "min_station":
+        all_trip_info = query.query_min_station(place_pair=place_pair)
+    if query_type == "quickest":
+        all_trip_info = query.query_quickest(place_pair=place_pair)
+    # 随机选择一个trip来返回，作为后续preserve的对象（输入）
+    trip_info = random_from_list(all_trip_info)
+    print(trip_info)
+    return trip_info
+
+
+# 3.用户登陆并查询余票失败（没有station）
+# 输入一个不存在的起始站点或终止站点(通过控制输入值来保证查不到travel)
+def query_left_tickets_unsuccessfully(query_type: str = "normal",
+                                      place_pair: tuple = ("start_station_fail", "end_station_fail")):
+    # 用户登陆
+    query = Query(Constant.ts_address)
+    query.login(Constant.user_username, Constant.user_pwd)
+    # 查询余票(确定起始站、终点站以及列车类型)
+    # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
+    all_trip_info = []
+    if query_type == "normal":
+        all_trip_info = query.query_normal_ticket(place_pair=place_pair)
+    if query_type == "high_speed":
+        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair)
+    if query_type == "cheapest":
+        all_trip_info = query.query_cheapest(place_pair=place_pair)
+    if query_type == "min_station":
+        all_trip_info = query.query_min_station(place_pair=place_pair)
+    if query_type == "quickest":
+        all_trip_info = query.query_quickest(place_pair=place_pair)
+    if all_trip_info is None or len(all_trip_info) == 0:   # 如不存在则返回值为null或[]
+        logger.warning("query left tickets unsuccessfully : "
+                       "no route found because of unknown start station or end station")
+    else:
+        logger.warning("error : query left tickets successfully , Unsatisfied query conditions")
+
+
+# 4.预定成功且刷新订单
+# 输入 query对象，因为preserve的前提是登陆成功
+def preserve_and_refresh(trip_info: dict, date: str = ""):
+    query = Query(Constant.ts_address)  # 用户登陆
+    query.login(Constant.user_username, Constant.user_pwd)
+    query.preserve(trip_info=trip_info, date=date)  # 订票
+    query.query_orders()  # refresh刷新订单
 
 
 # if __name__ == '__main__':
