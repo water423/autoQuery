@@ -4,6 +4,8 @@ from queries import Query
 from utils import *
 import time
 import logging
+import operator
+
 
 logger = logging.getLogger("data_init")
 highspeed_weights = {True: 60, False: 40}
@@ -271,6 +273,15 @@ def preserve_and_refresh(trip_info: dict, date: str = ""):
 
 # if __name__ == '__main__':
 
+# 查询新加的两个站之间是否有直接的线路
+def search_route2staion(query, search_id_pair: list = ["chongqingbei", "guiyangbei"],):
+    routes = query.admin_get_all_routes()
+    for ele in routes:
+        stations = ele["stations"]
+        if operator.eq(stations, search_id_pair):
+            return ele["id"]
+    return ""
+
 # 5.使用admin添加查询失败的线路站点车次，并重新查询返回trip相关信息
 def admin_add_route_search(
         search_id_pair: tuple = ("chongqingbei", "guiyangbei"),
@@ -285,6 +296,8 @@ def admin_add_route_search(
         miss_station_name,
         5
     )
+    origin_route_id = search_route2staion(query, list(search_id_pair))
+
     # 添加路线,获取route_id
     route_id = query.admin_add_route(
         search_id_pair[0]+","+search_id_pair[1],
@@ -292,6 +305,9 @@ def admin_add_route_search(
         search_id_pair[0],
         search_id_pair[1]
     )["id"]
+    if origin_route_id != "":
+        query.admin_delete_route(route_id)
+        route_id = origin_route_id
     # 添加车次
     train_type = random.choice(AdminData.train_types)
     travel_data = query.admin_add_travel(
