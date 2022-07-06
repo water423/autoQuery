@@ -5,13 +5,14 @@ from utils import *
 import time
 import logging
 import operator
+import uuid
 
 
 logger = logging.getLogger("data_init")
 highspeed_weights = {True: 60, False: 40}
 datestr = time.strftime("%Y-%m-%d", time.localtime())
 
-# 1.admin相关增删改查：post -> get -> update -> get -> delete
+# admin相关增删改查：post -> get -> update -> get -> delete
 def data_init():
     # 1. 添加新的站点、路线、车次
     # 2. 添加新的用户
@@ -210,51 +211,68 @@ def admin_operations():
     admin_query.admin_get_all_users()
 
 
-# 2.用户登陆并成功查询到余票(普通查询):输入起始站and终点站，以及查询类型
-# 查询类型： normal , high_speed , cheapest , min_station , quickest
-def query_left_tickets_successfully(query_type: str = "normal", place_pair: tuple = ()) -> dict:
-    # 用户登陆
+# 新增用户并登陆
+def new_user() -> Query:
+    admin_query = AdminQuery(Constant.ts_address)
+    admin_query.login(Constant.admin_username, Constant.admin_pwd)
+    # 利用uuid新建一个用户的用户名，密码默认为111111
+    new_username = uuid.uuid1().hex  # 转换成str
+    res = admin_query.admin_add_user("1", "5599488099312X", "ts@fd1.edu.cn", "111111", new_username, "1")
+    print(f"[new user] : userId : {res.get('userId')} , username : {res.get('userName')} , pwd : {res.get('password')}")
+    # 登陆
     query = Query(Constant.ts_address)
-    query.login(Constant.user_username, Constant.user_pwd)
+    query.login(new_username, "111111")
+    return query
+
+
+# 用户登陆并成功查询到余票(普通查询):输入起始站and终点站，日期以及查询类型
+# 查询类型： normal , high_speed , cheapest , min_station , quickest
+def query_left_tickets_successfully(query: Query,
+                                    query_type: str = "normal", place_pair: tuple = (), date: str = "") -> dict:
+    # 用户登陆
+    # query = Query(Constant.ts_address)
+    # query.login(username=username, password=pwd)
     # 查询余票(确定起始站、终点站以及列车类型)
     # 类型：普通票、高铁票、高级查询（最快、最少站、最便宜）
     all_trip_info = []  # 成功查询的结果
     if query_type == "normal":
-        all_trip_info = query.query_normal_ticket(place_pair=place_pair)
+        all_trip_info = query.query_normal_ticket(place_pair=place_pair, time=date)
     if query_type == "high_speed":
-        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair)
+        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair, time=date)
     if query_type == "cheapest":
-        all_trip_info = query.query_cheapest(place_pair=place_pair)
+        all_trip_info = query.query_cheapest(place_pair=place_pair, date=date)
     if query_type == "min_station":
-        all_trip_info = query.query_min_station(place_pair=place_pair)
+        all_trip_info = query.query_min_station(place_pair=place_pair, date=date)
     if query_type == "quickest":
-        all_trip_info = query.query_quickest(place_pair=place_pair)
+        all_trip_info = query.query_quickest(place_pair=place_pair, date=date)
     # 随机选择一个trip来返回，作为后续preserve的对象（输入）
     trip_info = random_from_list(all_trip_info)
-    print(trip_info)
+    print(f"[trip info selected] : {trip_info}")
     return trip_info
 
 
-# 3.用户登陆并查询余票失败（没有station）
+# 用户登陆并查询余票失败（没有station）
 # 输入一个不存在的起始站点或终止站点(通过控制输入值来保证查不到travel)
-def query_left_tickets_unsuccessfully(query_type: str = "normal",
-                                      place_pair: tuple = ("start_station_fail", "end_station_fail")):
+def query_left_tickets_unsuccessfully(query: Query,
+                                      query_type: str = "normal",
+                                      place_pair: tuple = ("start_station_fail", "end_station_fail"),
+                                      date: str = ""):
     # 用户登陆
-    query = Query(Constant.ts_address)
-    query.login(Constant.user_username, Constant.user_pwd)
+    # query = Query(Constant.ts_address)
+    # query.login(username=username, password=pwd)
     # 查询余票(确定起始站、终点站以及列车类型)
     # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
     all_trip_info = []
     if query_type == "normal":
-        all_trip_info = query.query_normal_ticket(place_pair=place_pair)
+        all_trip_info = query.query_normal_ticket(place_pair=place_pair, time=date)
     if query_type == "high_speed":
-        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair)
+        all_trip_info = query.query_high_speed_ticket(place_pair=place_pair, time=date)
     if query_type == "cheapest":
-        all_trip_info = query.query_cheapest(place_pair=place_pair)
+        all_trip_info = query.query_cheapest(place_pair=place_pair, date=date)
     if query_type == "min_station":
-        all_trip_info = query.query_min_station(place_pair=place_pair)
+        all_trip_info = query.query_min_station(place_pair=place_pair, date=date)
     if query_type == "quickest":
-        all_trip_info = query.query_quickest(place_pair=place_pair)
+        all_trip_info = query.query_quickest(place_pair=place_pair, date=date)
     if all_trip_info is None or len(all_trip_info) == 0:   # 如不存在则返回值为null或[]
         logger.warning("query left tickets unsuccessfully : "
                        "no route found because of unknown start station or end station")
@@ -262,16 +280,14 @@ def query_left_tickets_unsuccessfully(query_type: str = "normal",
         logger.warning("error : query left tickets successfully , Unsatisfied query conditions")
 
 
-# 4.预定成功且刷新订单
+# 预定成功且刷新订单
 # 输入 query对象，因为preserve的前提是登陆成功
-def preserve_and_refresh(trip_info: dict, date: str = ""):
-    query = Query(Constant.ts_address)  # 用户登陆
-    query.login(Constant.user_username, Constant.user_pwd)
+def preserve_and_refresh(query: Query, trip_info: dict, date: str = ""):
+    # query = Query(Constant.ts_address)  # 用户登陆
+    # query.login(username=username, password=pwd)
     query.preserve(trip_info=trip_info, date=date)  # 订票
     query.query_orders()  # refresh刷新订单
 
-
-# if __name__ == '__main__':
 
 # 查询新加的两个站之间是否有直接的线路
 def search_route2staion(query, search_id_pair: list = ["chongqingbei", "guiyangbei"],):
@@ -282,7 +298,8 @@ def search_route2staion(query, search_id_pair: list = ["chongqingbei", "guiyangb
             return ele["id"]
     return ""
 
-# 5.使用admin添加查询失败的线路站点车次，并重新查询返回trip相关信息
+
+# 使用admin添加查询失败的线路站点车次，并重新查询返回trip相关信息
 def admin_add_route_search(
         search_id_pair: tuple = ("chongqingbei", "guiyangbei"),
         search_name_pair: tuple = ("Chong Qing Bei", "Gui Yang Bei"),
