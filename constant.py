@@ -120,6 +120,17 @@ class AdminData:
         }
     ]
 
+    random_train_type_reflection = {
+        "GaoTieOne": "G10246",
+        "GaoTieTwo": "G10247",
+        "DongCheOne": "D10248",
+        "ZhiDa": "Z10249",
+        "TeKuai": "T10250",
+        "KuaiSu": "K10251"
+    }
+
+
+
 
 
 
