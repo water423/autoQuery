@@ -229,9 +229,6 @@ def new_user() -> Query:
 # 查询类型： normal , high_speed , cheapest , min_station , quickest
 def query_left_tickets_successfully(query: Query,
                                     query_type: str = "normal", place_pair: tuple = (), date: str = "") -> dict:
-    # 用户登陆
-    # query = Query(Constant.ts_address)
-    # query.login(username=username, password=pwd)
     # 查询余票(确定起始站、终点站以及列车类型)
     # 类型：普通票、高铁票、高级查询（最快、最少站、最便宜）
     all_trip_info = []  # 成功查询的结果
@@ -247,7 +244,7 @@ def query_left_tickets_successfully(query: Query,
         all_trip_info = query.query_quickest(place_pair=place_pair, date=date)
     # 随机选择一个trip来返回，作为后续preserve的对象（输入）
     trip_info = random_from_list(all_trip_info)
-    print(f"[trip info selected] : {trip_info}")
+    print(f"[query trip info] : {trip_info}")
     return trip_info
 
 
@@ -257,9 +254,6 @@ def query_left_tickets_unsuccessfully(query: Query,
                                       query_type: str = "normal",
                                       place_pair: tuple = ("start_station_fail", "end_station_fail"),
                                       date: str = ""):
-    # 用户登陆
-    # query = Query(Constant.ts_address)
-    # query.login(username=username, password=pwd)
     # 查询余票(确定起始站、终点站以及列车类型)
     # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
     all_trip_info = []
@@ -281,12 +275,17 @@ def query_left_tickets_unsuccessfully(query: Query,
 
 
 # 预定成功且刷新订单
-# 输入 query对象，因为preserve的前提是登陆成功
-def preserve_and_refresh(query: Query, trip_info: dict, date: str = ""):
-    # query = Query(Constant.ts_address)  # 用户登陆
-    # query.login(username=username, password=pwd)
-    query.preserve(trip_info=trip_info, date=date)  # 订票
-    query.query_orders()  # refresh刷新订单
+# 输入 query对象，预定的trip信息，预定的日期，刷新所有订单后返回的状态(如果不输入默认返回order界面的订单即未付款/已付款未取票)
+def preserve_and_refresh(query: Query, trip_info: dict, date: str = "", types: tuple = tuple([0, 1])) -> List[dict]:
+    # 订票
+    query.preserve(trip_info=trip_info, date=date)
+    # refresh刷新订单并返回所有特定状态的订单信息，注意需要分两次返回，因为高铁动车与其他车型是两个不同的接口
+    # 注意此处调用query_orders_all_info接口来获取所有信息，而不是query_orders
+    res_high_speed = query.query_orders_all_info(types=types)
+    res_normal = query.query_orders_all_info(types=types, query_other=True)
+    res = res_high_speed + res_normal
+    print(res)
+    return res
 
 
 # 查询新加的两个站之间是否有直接的线路
@@ -334,11 +333,50 @@ def admin_add_route_search(
         AdminData.travel_start_time
     )
 
-    trip_info = query_left_tickets_successfully("normal", search_name_pair)
+    trip_info = query_left_tickets_successfully(query, "normal", search_name_pair)
     return trip_info
 
 
+# 改签
+# 在预定成功并刷新订单来获取所有符合条件的订单的场景之后，搜索得到刚刚预定的订单并且改签(再次query)
+# 输入为refresh查找得到的所有order信息(orderId，tripId)
+def rebook(query: Query, order_info: dict):
 
+    # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签)
+    train_type = order_info.get("trainNumber")[0]
+    if train_type == 'G' or train_type == 'D':
+        query_type = "high_speed"
+    else:
+        query_type = "normal"
+    place_pair = (order_info.get("from"), order_info.get("to"))
+    new_date = datestr  # 获取当天
+    new_trip_info = query_left_tickets_successfully(query, query_type, place_pair, new_date)
+    print(f"[rebook new trip info] : {new_trip_info}")
+
+    # 改签(默认改签当天)
+    new_trip_id = new_trip_info.get("tripId").get("type")+new_trip_info.get("tripId").get("number")  # 返回值是dict
+    query.rebook_ticket(order_info.get("id"), order_info.get("trainNumber"),
+                        new_trip_id, new_date, order_info.get("coachNumber"))
+
+
+# 改签失败(原因：改签两次)
+# 在预定成功并刷新订单来获取所有符合条件的订单的场景之后，搜索得到刚刚预定的订单并且改签(再次query)
+# 输入为refresh查找得到的所有order信息(orderId，tripId)
+def rebook_unsuccessfully_for_rebook_twice(query: Query, order_info: dict):
+    # 调用paid and rebook successfully函数后再次rebook
+    pay_and_rebook_successfully(query, order_info)
+
+    # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签)
+    rebook(query, order_info)
+
+
+# 支付并且改签成功
+def pay_and_rebook_successfully(query: Query, order_info: dict):
+    # 支付
+    query.pay_order(order_info.get("id"), order_info.get("trainNumber"))
+
+    # 改签
+    rebook(query, order_info)
 
 
 
