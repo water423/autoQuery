@@ -116,7 +116,6 @@ class Query:
             return None
 
         data = response.json().get("data")                           # 响应正常则获取内容（字典集）
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -156,7 +155,6 @@ class Query:
             return None
 
         data = response.json().get("data")                     # 响应正确
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -202,7 +200,6 @@ class Query:
             return None
 
         data = response.json().get("data")                          # 响应正确
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -248,7 +245,6 @@ class Query:
             return None
 
         data = response.json().get("data")                                      # 响应正确
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -427,20 +423,22 @@ class Query:
             return None
 
         data = response.json().get("data")
-        list = []
-        for d in data:
-            if d.get("status") in types:
-                result = {}
-                result["accountId"] = d.get("accountId")
-                result["targetDate"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-                result["orderId"] = d.get("id")
-                result["from"] = d.get("from")
-                result["to"] = d.get("to")
-                list.append(result)
+        # list = []
+        # for d in data:
+        #     if d.get("status") in types:
+        #         result = {}
+        #         result["accountId"] = d.get("accountId")
+        #         result["travelDate"] = d.get("travelDate")
+        #         result["travelTime"] = d.get("travelDate")
+        #         result["trainNumber"] = d.get("trainNumber")
+        #         result["orderId"] = d.get("id")
+        #         result["from"] = d.get("from")
+        #         result["to"] = d.get("to")
+        #         list.append(result)
 
-        logger.info(f"queried {len(list)} orders")
+        logger.info(f"queried {len(data)} orders")
 
-        return list
+        return data
 
     # 使用寄送服务（请求固定值，返回新生成的订单ID）
     def put_consign(self, result, headers: dict = {}) -> str:
