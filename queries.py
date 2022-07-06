@@ -116,7 +116,6 @@ class Query:
             return None
 
         data = response.json().get("data")                           # 响应正常则获取内容（字典集）
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -156,7 +155,6 @@ class Query:
             return None
 
         data = response.json().get("data")                     # 响应正确
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -202,7 +200,6 @@ class Query:
             return None
 
         data = response.json().get("data")                          # 响应正确
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -248,7 +245,6 @@ class Query:
             return None
 
         data = response.json().get("data")                                      # 响应正确
-        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -427,20 +423,22 @@ class Query:
             return None
 
         data = response.json().get("data")
-        list = []
-        for d in data:
-            if d.get("status") in types:
-                result = {}
-                result["accountId"] = d.get("accountId")
-                result["targetDate"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-                result["orderId"] = d.get("id")
-                result["from"] = d.get("from")
-                result["to"] = d.get("to")
-                list.append(result)
+        # list = []
+        # for d in data:
+        #     if d.get("status") in types:
+        #         result = {}
+        #         result["accountId"] = d.get("accountId")
+        #         result["travelDate"] = d.get("travelDate")
+        #         result["travelTime"] = d.get("travelDate")
+        #         result["trainNumber"] = d.get("trainNumber")
+        #         result["orderId"] = d.get("id")
+        #         result["from"] = d.get("from")
+        #         result["to"] = d.get("to")
+        #         list.append(result)
 
-        logger.info(f"queried {len(list)} orders")
+        logger.info(f"queried {len(data)} orders")
 
-        return list
+        return data
 
     # 使用寄送服务（请求固定值，返回新生成的订单ID）
     def put_consign(self, result, headers: dict = {}) -> str:
@@ -671,8 +669,14 @@ class Query:
         else:
             logger.info("choose contact already existed")
             contacts_result = self.query_contacts()
-            contacts_id = random_from_list(contacts_result).get("id")  # 需要获取id属性为联系人的id
-            base_preserve_payload["contactsId"] = contacts_id
+            # 注意如果联系人为空就新建一个
+            if len(contacts_result) == 0:
+                new_contact = True
+                contacts_id = self.add_contact()  # 新增联系人并返回contactId
+                base_preserve_payload["contactsId"] = contacts_id
+            else:
+                contacts_id = random_from_list(contacts_result).get("id")  # 需要获取id属性为联系人的id
+                base_preserve_payload["contactsId"] = contacts_id
 
         # 随机选择是否需要食物
         # need_food = random_boolean()
@@ -690,7 +694,7 @@ class Query:
         # 随机选择是否需要保险
         need_assurance = random_boolean()
         if need_assurance:  # 如果需要保险则查询保险并使得assurance参数为1，否则默认为0
-            assurance_result = self.query_food()  # 系统内置只有一种assurance
+            assurance_result = self.query_assurances()  # 系统内置只有一种assurance
             # assurance_dict = random_from_list(assurance_result)
             base_preserve_payload["assurance"] = 1
 
@@ -710,11 +714,8 @@ class Query:
             f"new_contact:{new_contact} need_food:{need_food}  "
             f"need_consign: {need_consign}  need_assurance:{need_assurance}")
 
-        print("[preserve choices] tripId:"+trip_id)
-        print(new_contact)
-        print(need_food)
-        print(need_consign)
-        print(need_assurance)
+        print(f"[preserve choices] [tripId] : {trip_id} ; [new_contact] : {new_contact} ; "
+              f"[need_food] : {need_food} ; [need_consign] : {need_consign} ; [need_assurance] : {need_assurance}")
 
         res = self.session.post(url=preserve_url,
                                 headers=headers,
