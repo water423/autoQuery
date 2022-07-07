@@ -34,7 +34,7 @@ def preserve_successfully() -> List[dict]:
     # 查询余票
     trip_info = query_left_tickets_successfully(query, query_type, query_place_pair, "2022-07-06")
     # 订票并刷新订单
-    all_orders_info = preserve_and_refresh(query, trip_info)
+    all_orders_info = preserve_and_refresh(query, trip_info, 0)
 
     # 退出并删除用户（暂时不可用）
     userid_deleted = query.uid
@@ -64,7 +64,7 @@ def preserve_unsuccessfully():
 # login -> preserve_successfully -> rebook失败(not paid) -> pay and rebook成功 -> 取票进站台
 def routine():
     # 新建用户并登陆or使用特定用户登陆
-    # query = new_user()
+    # query, user_data = new_user()
     query = Query(Constant.ts_address)
     query.login("b7551865fce611ec868ab0359fb6e508", "111111")
 

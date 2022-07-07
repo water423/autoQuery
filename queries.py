@@ -736,7 +736,7 @@ class Query:
         return
 
     # 以下三个函数分别通过三种信息查询consign
-    def query_by_account_id(self, account_id, headers: dict = {}):
+    def query_consign_by_account_id(self, account_id, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/account/{account_id}"
@@ -749,7 +749,7 @@ class Query:
             logger.warning(
                 f"faild to query consign with status_code: {r.status_code}")
 
-    def query_by_order_id(self, order_id, headers: dict = {}):
+    def query_consign_by_order_id(self, order_id, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/order/{order_id}"
@@ -763,7 +763,7 @@ class Query:
                 f"faild to query consign with status_code: {r.status_code}")
 
 
-    def query_by_consignee(self, consignee, headers: dict = {}):
+    def query_consign_by_consignee(self, consignee, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/{consignee}"
