@@ -1022,7 +1022,6 @@ class AdminQuery(Query):
             return None
 
         data = response.json().get("data")  # 用string形式返回
-        print(data)
         return data
 
     def orders_put(self, order_id: str, bought_date: str = "1655783404439", travel_date: str = "1501257600000",
