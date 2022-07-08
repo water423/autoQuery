@@ -1157,7 +1157,7 @@ class AdminQuery(Query):
 
         # 返回值为删除order的信息
         data = response.json().get("data")  # 用string形式返回
-        print(data)
+        logger.info(data)
         return data
 
 

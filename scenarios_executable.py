@@ -67,6 +67,27 @@ def preserve_unsuccessfully():
     order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
     order_id = order_info.get("id")
 
+# 正常查票订票检票进站
+def routine0():
+    # 新建用户并登陆or使用特定用户登陆
+    query = new_user()
+    # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
+    all_orders_info = preserve_successfully(query)
+    # 选择一个订单作为此次处理的对象，输入的order的状态已经是符合条件的了 preserve_and_refresh的参数types来确定
+    order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
+    print(order_info)
+    # 支付
+    query.pay_order(order_info.get("id"), order_info.get("trainNumber"))
+    # 取票进站
+    collect_and_enter(query, order_info.get("id"))
+    # admin删除订单
+    admin = AdminQuery(Constant.ts_address)
+    admin.login(Constant.admin_username, Constant.admin_pwd)
+    admin.orders_delete(order_info.get("id"), order_info.get("trainNumber"))
+
+    ## admin删除用户
+    admin.admin_delete_user(query.uid)
+
 # rebook失败后成功(一套完整的流程)
 # login -> preserve_successfully -> rebook失败(not paid) -> pay and rebook成功 -> 取票进站台
 def routine1():
@@ -96,7 +117,6 @@ def routine1():
     admin.orders_delete(order_id, order_info.get("trainNumber"))
 
     ## admin删除用户
-
     admin.admin_delete_user(query.uid)
 
 # rebook两次后取消
