@@ -95,7 +95,7 @@ class AdminData:
             "document_num": "7799488099312X",
             "email": "ts@fd99.edu.cn",
             "password": "111111",
-            "username": "adminTest1",
+            "username": "adminTest3",
             "gender": "1"
     }
 
