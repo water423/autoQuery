@@ -222,7 +222,7 @@ def new_user() -> Query:
     # 登陆
     query = Query(Constant.ts_address)
     query.login(new_username, "111111")
-    return query
+    return query, res
 
 
 # 用户登陆并成功查询到余票(普通查询):输入起始站and终点站，日期以及查询类型
@@ -377,6 +377,33 @@ def pay_and_rebook_successfully(query: Query, order_info: dict):
 
     # 改签
     rebook(query, order_info)
+
+# 检票进站
+def collect_and_enter(query: Query, order_id):
+    query.collect_order(order_id)
+    query.enter_station(order_id)
+    logger.info("collect and enter station")
+
+# 查询order的consign并进行新增
+def extra_consign(
+        query: Query,
+        order_info: dict,
+
+):
+    # 查询当前order的consign
+    query.query_consign_by_order_id(query.uid)
+    # 新建consign
+    consign_data = {
+        "accountId": query.uid,
+        "targetDate": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
+        "from": order_info.get("from"),
+        "to": order_info.get("to"),
+        "orderId": order_info.get("id"),
+    }
+    query.put_consign(consign_data)
+    # 再次查询
+    query.query_consign_by_order_id(query.uid)
+
 
 
 

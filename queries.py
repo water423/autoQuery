@@ -548,7 +548,6 @@ class Query:
         else:
             logger.warning(
                 f"order {order_id} collect failed, code: {res.status_code}, text: {res.text}")
-
         return order_id
 
     # 进站（输入订单id）
@@ -601,7 +600,7 @@ class Query:
             logger.warning(
                 f"Request Failed: status code: {r.status_code}, {r.text}")
 
-        return
+        return r.text
 
     # 订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
     # query查询到trip信息随机选择一个trip并传入此函数，则通过train_type就可以判断是否是高铁动车票，date与查询日期一致
@@ -736,7 +735,7 @@ class Query:
         return
 
     # 以下三个函数分别通过三种信息查询consign
-    def query_by_account_id(self, account_id, headers: dict = {}):
+    def query_consign_by_account_id(self, account_id, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/account/{account_id}"
@@ -749,7 +748,7 @@ class Query:
             logger.warning(
                 f"faild to query consign with status_code: {r.status_code}")
 
-    def query_by_order_id(self, order_id, headers: dict = {}):
+    def query_consign_by_order_id(self, order_id, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/order/{order_id}"
@@ -763,7 +762,7 @@ class Query:
                 f"faild to query consign with status_code: {r.status_code}")
 
 
-    def query_by_consignee(self, consignee, headers: dict = {}):
+    def query_consign_by_consignee(self, consignee, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/{consignee}"
