@@ -69,6 +69,7 @@ def preserve_unsuccessfully():
 
 # 正常查票订票检票进站
 def routine0():
+    data_init()
     # 新建用户并登陆or使用特定用户登陆
     query = new_user()
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
@@ -91,6 +92,7 @@ def routine0():
 # rebook失败后成功(一套完整的流程)
 # login -> preserve_successfully -> rebook失败(not paid) -> pay and rebook成功 -> 取票进站台
 def routine1():
+    data_init()
     # 新建用户并登陆or使用特定用户登陆
     query = new_user()
     # query = Query(Constant.ts_address)
@@ -122,6 +124,7 @@ def routine1():
 # rebook两次后取消
 # login -> preserve_successfully -> rebook两次失败 -> cancel
 def rebook_twice_and_cancel():
+    data_init()
     # 新建用户并登陆or使用特定用户登陆
     query = new_user()
     # query = Query(Constant.ts_address)
