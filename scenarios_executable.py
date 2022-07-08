@@ -50,21 +50,26 @@ def preserve_successfully(query: Query = None) -> List[dict]:
 # 异常preserve流程(no route)
 # login -> 查询余票(no route) -> admin添加相关信息 -> 查询余票成功 -> 正常预定&refresh -> 删除相关数据
 def preserve_unsuccessfully():
-    # 登陆
-    query = Query(Constant.ts_address)
-    query.login("b7551865fce611ec868ab0359fb6e508","111111")
+    # 新建用户并登陆or使用特定用户登陆
+    query = new_user()
+    # query = Query(Constant.ts_address)
+    # query.login("b7551865fce611ec868ab0359fb6e508", "111111")
 
     # 选择查询的方式
     query_types = ["normal", "high_speed", "min_station", "cheapest", "quickest"]
     query_type = random_from_list(query_types)
     print(query_type)
     query_left_tickets_unsuccessfully(query, query_type)  # 查询失败
-    # admin添加相关路线 -> preserve成功....
-
+    # admin添加相关路线 -> preserve成功
+    trip_info = admin_add_route_search()
+    # 订票并刷新订单
+    all_orders_info = preserve_and_refresh(query, trip_info, types=tuple([0]))  # 返回状态0的订单 not paid
+    order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
+    order_id = order_info.get("id")
 
 # rebook失败后成功(一套完整的流程)
 # login -> preserve_successfully -> rebook失败(not paid) -> pay and rebook成功 -> 取票进站台
-def routine():
+def routine1():
     # 新建用户并登陆or使用特定用户登陆
     query = new_user()
     # query = Query(Constant.ts_address)
@@ -86,7 +91,13 @@ def routine():
     collect_and_enter(query, order_id)
 
     # admin删除订单
+    admin = AdminQuery(Constant.ts_address)
+    admin.login(Constant.admin_username, Constant.admin_pwd)
+    admin.orders_delete(order_id, order_info.get("trainNumber"))
 
+    ## admin删除用户
+
+    admin.admin_delete_user(query.uid)
 
 # rebook两次后取消
 # login -> preserve_successfully -> rebook两次失败 -> cancel
@@ -107,5 +118,11 @@ def rebook_twice_and_cancel():
 
     # 取消订单
     query.cancel_order(order_id)
+
+    # admin删除用户
+    admin = AdminQuery(Constant.ts_address)
+    admin.login(Constant.admin_username, Constant.admin_pwd)
+    admin.admin_delete_user(query.uid)
+
 
 

@@ -96,14 +96,16 @@ def admin_operations():
             )
 
     # 初始化用户
-    user_id = admin_query.admin_add_user(
+    user_data = admin_query.admin_add_user(
         AdminData.admin_data_user["document_type"],
         AdminData.admin_data_user["document_num"],
         AdminData.admin_data_user["email"],
         AdminData.admin_data_user["password"],
         AdminData.admin_data_user["username"],
         AdminData.admin_data_user["gender"]
-    )["userId"]
+    )
+    print(user_data)
+    user_id = user_data["userId"]
     # 初始化用户联系人 没有联系人id无法删除 因此暂不添加
     # for contact in AdminData.admin_data_user_contacts:
     #     admin_query.contacts_post(
@@ -252,8 +254,8 @@ def query_left_tickets_successfully(query: Query,
 # 输入一个不存在的起始站点或终止站点(通过控制输入值来保证查不到travel)
 def query_left_tickets_unsuccessfully(query: Query,
                                       query_type: str = "normal",
-                                      place_pair: tuple = ("start_station_fail", "end_station_fail"),
-                                      date: str = ""):
+                                      place_pair: tuple = ("Chong Qing Bei", "Gui Yang Bei"),
+                                      date: str = time.strftime("%Y-%m-%d", time.localtime())):
     # 查询余票(确定起始站、终点站以及列车类型)
     # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
     all_trip_info = []

@@ -17,6 +17,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[stations_post]: station_id:{station_id}")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -48,6 +49,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return 所有车站组成的列表，每个车站的具体信息为字典形式，整合成string返回
         """
+        logger.info(f"[stations_get]: admin_get")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -73,6 +75,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[stations_put]: station_id:{station_id}")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -108,6 +111,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[stations_delete]: station_id:{station_id}")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -150,6 +154,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[contacts_post]: user_account_id:{account_id}")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -181,6 +186,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[contacts_get]: admin_get")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -212,6 +218,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[contacts_put]: user_account_id:{account_id}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -248,6 +256,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[contacts_delete]: user_account_id:{contact_id}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -279,6 +289,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[trains_post]: train_id:{train_id}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -311,6 +323,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[trains_get]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -339,6 +353,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[trains_put]: train_id:{train_id}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -372,6 +388,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[trains_delete]: train_id:{train_id}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -402,6 +420,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[configs_post]: name:{name}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -434,6 +454,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[configs_get]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -460,6 +482,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[configs_put]: name:{name}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -493,6 +517,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[configs_delete]: name:{name}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -526,6 +552,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[prices_post]: train_type:{train_type}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -558,6 +586,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[prices_get]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -587,6 +617,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[prices_put]: train_type:{train_type}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -628,6 +660,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[prices_delete]: train_type:{train_type}")
+
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -657,6 +691,8 @@ class AdminQuery(Query):
         return data
 
     def admin_get_all_routes(self, headers: dict = {}):
+        logger.info(f"[admin_get_all_routes]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -682,6 +718,8 @@ class AdminQuery(Query):
             start_station: str = "",
             end_station: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_add_route]: station_list:{station_list}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -707,6 +745,8 @@ class AdminQuery(Query):
             self,
             routeId: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_delete_route]: routeId:{routeId}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -721,6 +761,8 @@ class AdminQuery(Query):
         logger.info(f"route delete success for routeID {routeId}")
 
     def admin_get_all_users(self, headers: dict = {}):
+        logger.info(f"[admin_get_all_users]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -748,6 +790,8 @@ class AdminQuery(Query):
             username: str = "",
             gender: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_add_user]: username:{username}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -781,6 +825,8 @@ class AdminQuery(Query):
             username: str = "",
             gender: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_update_user]: username:{username}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -808,6 +854,8 @@ class AdminQuery(Query):
             self,
             user_id: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_delete_user]: user_id:{user_id}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -822,6 +870,8 @@ class AdminQuery(Query):
         logger.info(f"travel delete success for {user_id}!")
 
     def admin_get_all_travels(self, headers: dict = {}):
+        logger.info(f"[admin_get_all_travels]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -851,6 +901,8 @@ class AdminQuery(Query):
             start_time: str = "",
             # end_time: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_add_travel]: trip_id:{trip_id}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -885,6 +937,8 @@ class AdminQuery(Query):
             start_time: str = "",
             # end_time: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_update_travel]: trip_id:{trip_id}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -910,6 +964,8 @@ class AdminQuery(Query):
             self,
             trip_id: str = "",
             headers: dict = {}):
+        logger.info(f"[admin_delete_travel]: trip_id:{trip_id}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -952,6 +1008,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[orders_post]: account_id:{account_id}")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -1008,6 +1066,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[orders_get]: admin_get")
+
         if headers == {}:
             headers = self.session.headers
 
@@ -1031,6 +1091,7 @@ class AdminQuery(Query):
                    coach_number: int = 1, seat_class: int = 2, seat_number: str = "FirstClass-30",
                    order_from: str = "nanjing", order_to: str = "shanghaihongqiao", status: int = 0,
                    price: str = "100.0", headers: dict = {}) -> str:
+        logger.info(f"[orders_put]: order_id:{order_id}")
 
         # 请求url
         url = f"{self.address}/api/v1/adminorderservice/adminorder"
@@ -1076,6 +1137,8 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
+        logger.info(f"[orders_delete]: order_id:{order_id}")
+
         if headers == {}:
             headers = self.session.headers
 
