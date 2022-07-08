@@ -222,7 +222,7 @@ def new_user() -> Query:
     # 登陆
     query = Query(Constant.ts_address)
     query.login(new_username, "111111")
-    return query, res
+    return query
 
 
 # 用户登陆并成功查询到余票(普通查询):输入起始站and终点站，日期以及查询类型
@@ -340,7 +340,8 @@ def admin_add_route_search(
 # 改签
 # 在预定成功并刷新订单来获取所有符合条件的订单的场景之后，搜索得到刚刚预定的订单并且改签(再次query)
 # 输入为refresh查找得到的所有order信息(orderId，tripId)
-def rebook(query: Query, order_info: dict):
+def rebook(query: Query, order_info: dict) -> str:
+    order_id = order_info.get("id")  # 获取id
 
     # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签)
     train_type = order_info.get("trainNumber")[0]
@@ -355,8 +356,20 @@ def rebook(query: Query, order_info: dict):
 
     # 改签(默认改签当天)
     new_trip_id = new_trip_info.get("tripId").get("type")+new_trip_info.get("tripId").get("number")  # 返回值是dict
-    query.rebook_ticket(order_info.get("id"), order_info.get("trainNumber"),
-                        new_trip_id, new_date, order_info.get("coachNumber"))
+    res = query.rebook_ticket(order_info.get("id"), order_info.get("trainNumber"),
+                              new_trip_id, new_date, order_info.get("coachNumber"))
+
+    # 根据res区分不同情形
+    if res.find("you order not suitable to rebook!") != -1:
+        logger.warning("[rebook unsuccessfully]: not paid or rebook twice")
+    if res.find("You can only change the ticket before the train start or within 2 hours after the train start.") != -1:
+        logger.warning("[rebook unsuccessfully]: time invalid (within two hours)")
+    if res.find("Success!") != -1:  # 改签成功
+        # 如果改签成功则可能会产生新的orderId，则返回新的orderId
+        res_dict = eval(res)  # 改签成功的data不为null，可以转换为字典处理
+        order_id = res_dict.get("data").get("id")
+        logger.warning(f"[rebook successfully]: Success!  orderId : {order_id}")
+    return order_id
 
 
 # 改签失败(原因：改签两次)
@@ -367,7 +380,9 @@ def rebook_unsuccessfully_for_rebook_twice(query: Query, order_info: dict):
     pay_and_rebook_successfully(query, order_info)
 
     # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签)
-    rebook(query, order_info)
+    order_id = rebook(query, order_info)
+    logger.warning("[rebook unsuccessfully for rebook twice]")
+    return order_id
 
 
 # 支付并且改签成功
@@ -376,13 +391,16 @@ def pay_and_rebook_successfully(query: Query, order_info: dict):
     query.pay_order(order_info.get("id"), order_info.get("trainNumber"))
 
     # 改签
-    rebook(query, order_info)
+    order_id = rebook(query, order_info)
+    return order_id
+
 
 # 检票进站
 def collect_and_enter(query: Query, order_id):
     query.collect_order(order_id)
     query.enter_station(order_id)
     logger.info("collect and enter station")
+
 
 # 查询order的consign并进行新增
 def extra_consign(
