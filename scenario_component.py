@@ -101,7 +101,8 @@ def admin_operations():
         AdminData.admin_data_user["document_num"],
         AdminData.admin_data_user["email"],
         AdminData.admin_data_user["password"],
-        AdminData.admin_data_user["username"],
+        # AdminData.admin_data_user["username"],
+        uuid.uuid1().hex,
         AdminData.admin_data_user["gender"]
     )
     print(user_data)
@@ -151,7 +152,8 @@ def admin_operations():
         AdminData.admin_data_user["document_num"],
         AdminData.admin_data_user["email"],
         AdminData.admin_data_user["password"],
-        AdminData.admin_data_user["username"],
+        # AdminData.admin_data_user["username"],
+        uuid.uuid1().hex,
         AdminData.admin_data_user["gender"]
     )
     # 更新用户联系人 暂时无法更新，因为未返回联系人id
