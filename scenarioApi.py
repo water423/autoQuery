@@ -1,16 +1,17 @@
 import sys
-from scenario_component import admin_operations
+from scenario_component import admin_operations, data_init
 import time
 import threading
 
-from scenarios_executable import routine0
+from scenarios_executable import routine0, routine1, rebook_twice_and_cancel
 
 
 class ScenarioAPI:
     scenarios = {
-        "adminOperations": admin_operations,
+        "admin_operations": admin_operations,
         "normal_flow": routine0,
-
+        "rebook_flow": routine1,
+        "rebook_fail_flow": rebook_twice_and_cancel,
     }
     peak_start_time = ""
     peak_end_time = ""
@@ -148,6 +149,7 @@ if __name__ == '__main__':
         # 3 表示peak和valley均有 读入参数为 scenario type init_qps endtimeYMD endtimeHMS peak_start_time peak_end_time peak_qps valley_start_time valley_end_time valley_qps
         # 其中endtime为%Y-%m-%d %H:%M:%S格式 分成endtimeYMD和endtimeHMS两个参数
         # 各种end\start time为 %H:%M:%S格式
+        data_init()
         if type == '0':
             init_qps, endtimeYMD, endtimeHMS = sys.argv[3:6]
             init_qps = float(init_qps)
@@ -156,15 +158,22 @@ if __name__ == '__main__':
             scenario_api.run(scenario)
         if type == '1':
             init_qps, endtimeYMD, endtimeHMS, peak_start_time, peak_end_time, peak_qps = sys.argv[3:9]
+            init_qps = float(init_qps)
+            peak_qps = float(peak_qps)
             endtime = endtimeYMD + " " +  endtimeHMS
             scenario_api = ScenarioAPI(init_qps, endtime, peak_start_time, peak_end_time, peak_qps)
             scenario_api.run(scenario)
         if type == '2':
             init_qps, endtimeYMD, endtimeHMS, valley_start_time, valley_end_time, valley_qps = sys.argv[3:9]
+            init_qps = float(init_qps)
+            valley_qps = float(valley_qps)
             endtime = endtimeYMD + " " +  endtimeHMS
             scenario_api = ScenarioAPI(init_qps, endtime, "", "", 0, valley_start_time, valley_end_time, valley_qps)
             scenario_api.run(scenario)
         init_qps, endtimeYMD, endtimeHMS, peak_start_time, peak_end_time, peak_qps, valley_start_time, valley_end_time, valley_qps = sys.argv[3:12]
+        init_qps = float(init_qps)
+        peak_qps = float(peak_qps)
+        valley_qps = float(valley_qps)
         endtime = endtimeYMD + " " + endtimeHMS
         scenario_api = ScenarioAPI(init_qps, endtime, peak_start_time, peak_end_time, peak_qps, valley_start_time,
                                    valley_end_time, valley_qps)

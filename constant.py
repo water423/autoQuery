@@ -2,6 +2,7 @@
 
 class Constant:
     ts_address = "http://139.196.152.44:32677"
+    # ts_address = "http://10.176.122.156:32677"
     admin_username = "admin"
     admin_pwd = "222222"
     user_username = "fdse_microservice"
