@@ -101,7 +101,8 @@ def admin_operations():
         AdminData.admin_data_user["document_num"],
         AdminData.admin_data_user["email"],
         AdminData.admin_data_user["password"],
-        AdminData.admin_data_user["username"],
+        # AdminData.admin_data_user["username"],
+        uuid.uuid1().hex,
         AdminData.admin_data_user["gender"]
     )
     print(user_data)
@@ -151,7 +152,8 @@ def admin_operations():
         AdminData.admin_data_user["document_num"],
         AdminData.admin_data_user["email"],
         AdminData.admin_data_user["password"],
-        AdminData.admin_data_user["username"],
+        # AdminData.admin_data_user["username"],
+        uuid.uuid1().hex,
         AdminData.admin_data_user["gender"]
     )
     # 更新用户联系人 暂时无法更新，因为未返回联系人id
@@ -278,7 +280,7 @@ def query_left_tickets_unsuccessfully(query: Query,
 
 # 预定成功且刷新订单
 # 输入 query对象，预定的trip信息，预定的日期，刷新所有订单后返回的状态(如果不输入默认返回order界面的订单即未付款/已付款未取票)
-def preserve_and_refresh(query: Query, trip_info: dict, date: str = "", types: tuple = tuple([0, 1])) -> List[dict]:
+def preserve_and_refresh(query: Query, trip_info: dict, date: str = time.strftime("%Y-%m-%d", time.localtime()), types: tuple = tuple([0, 1])) -> List[dict]:
     # 订票
     query.preserve(trip_info=trip_info, date=date)
     # refresh刷新订单并返回所有特定状态的订单信息，注意需要分两次返回，因为高铁动车与其他车型是两个不同的接口
@@ -423,9 +425,3 @@ def extra_consign(
     query.put_consign(consign_data)
     # 再次查询
     query.query_consign_by_order_id(query.uid)
-
-
-
-
-
-
