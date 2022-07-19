@@ -90,18 +90,18 @@ class ScenarioAPI:
             division = self.time_divide(now_time)
             if division == "peak":
                 time.sleep(1 / self.peak_qps)
-                self.pool.submit(func, 50)
+                self.pool.submit(func)
                 # t = threading.Thread(target=func, args=())
                 # t.start()
                 continue
             if division == "valley":
                 time.sleep(1 / self.valley_qps)
-                self.pool.submit(func, 50)
+                self.pool.submit(func)
                 # t = threading.Thread(target=func, args=())
                 # t.start()
                 continue
             time.sleep(1 / self.init_qps)
-            self.pool.submit(func, 50)
+            self.pool.submit(func)
             # t = threading.Thread(target=func, args=())
             # t.start()
         self.pool.shutdown()
