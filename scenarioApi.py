@@ -1,4 +1,6 @@
 import sys
+from concurrent.futures.thread import ThreadPoolExecutor
+
 from scenario_component import admin_operations, data_init
 import time
 import threading
@@ -24,6 +26,7 @@ class ScenarioAPI:
     valley_qps = 0
     init_qps = 0
     endtime = ""
+    pool = ThreadPoolExecutor(max_workers=100)
 
     def __init__(
             self,
@@ -87,18 +90,21 @@ class ScenarioAPI:
             division = self.time_divide(now_time)
             if division == "peak":
                 time.sleep(1 / self.peak_qps)
-                t = threading.Thread(target=func, args=())
-                t.start()
+                self.pool.submit(func, 50)
+                # t = threading.Thread(target=func, args=())
+                # t.start()
                 continue
             if division == "valley":
                 time.sleep(1 / self.valley_qps)
-                t = threading.Thread(target=func, args=())
-                t.start()
+                self.pool.submit(func, 50)
+                # t = threading.Thread(target=func, args=())
+                # t.start()
                 continue
             time.sleep(1 / self.init_qps)
-            t = threading.Thread(target=func, args=())
-            t.start()
-
+            self.pool.submit(func, 50)
+            # t = threading.Thread(target=func, args=())
+            # t.start()
+        self.pool.shutdown()
     # def run(
     #     scenario,
     #     peak_start_time,
