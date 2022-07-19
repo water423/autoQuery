@@ -3,7 +3,8 @@ from scenario_component import admin_operations, data_init
 import time
 import threading
 
-from scenarios_executable import routine0, routine1, rebook_twice_and_cancel
+from scenarios_executable import routine0, routine1, rebook_twice_and_cancel, search_failed_and_preserve, \
+    consign_and_preserve
 
 
 class ScenarioAPI:
@@ -12,6 +13,8 @@ class ScenarioAPI:
         "normal_flow": routine0,
         "rebook_flow": routine1,
         "rebook_fail_flow": rebook_twice_and_cancel,
+        "search_fail_add": search_failed_and_preserve,
+        "consign_preserve": consign_and_preserve
     }
     peak_start_time = ""
     peak_end_time = ""
