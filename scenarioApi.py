@@ -65,7 +65,7 @@ class ScenarioAPI:
             today_peak_end_date_time_tick = time.mktime(time.strptime(today_peak_end_date, "%Y-%m-%d %H:%M:%S"))
             if now_time > today_peak_start_time_tick and now_time < today_peak_end_date_time_tick:
                 return "peak"
-        if self.valley_qps != "":
+        if self.valley_start_time != "":
             today_valley_start_date = now_date + " " + self.valley_start_time
             today_valley_end_date = now_date + " " + self.valley_end_time
             today_valley_start_date_time_tick = time.mktime(time.strptime(today_valley_start_date, "%Y-%m-%d %H:%M:%S"))

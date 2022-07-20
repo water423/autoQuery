@@ -67,6 +67,7 @@ def preserve_unsuccessfully():
     order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
     order_id = order_info.get("id")
 
+
 # 正常查票订票检票进站
 def routine0():
     # 新建用户并登陆or使用特定用户登陆
@@ -85,8 +86,9 @@ def routine0():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     admin.orders_delete(order_info.get("id"), order_info.get("trainNumber"))
 
-    ## admin删除用户
+    # admin删除用户
     admin.admin_delete_user(query.uid)
+
 
 # rebook失败后成功(一套完整的流程)
 # login -> preserve_successfully -> rebook失败(not paid) -> pay and rebook成功 -> 取票进站台
@@ -116,8 +118,9 @@ def routine1():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     admin.orders_delete(order_id, order_info.get("trainNumber"))
 
-    ## admin删除用户
+    # admin删除用户
     admin.admin_delete_user(query.uid)
+
 
 # rebook两次后取消
 # login -> preserve_successfully -> rebook两次失败 -> cancel
@@ -143,6 +146,7 @@ def rebook_twice_and_cancel():
     admin = AdminQuery(Constant.ts_address)
     admin.login(Constant.admin_username, Constant.admin_pwd)
     admin.admin_delete_user(query.uid)
+
 
 # 预定车票查询失败，admin添加并重新预定
 # login -> search failed -> admin add -> preserve_successfully -> collect & enter
@@ -170,8 +174,9 @@ def search_failed_and_preserve():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     admin.orders_delete(order_id, train_num)
 
-    ## admin删除用户
+    # admin删除用户
     admin.admin_delete_user(query.uid)
+
 
 # consign加入preserve过程
 def consign_and_preserve():
@@ -193,5 +198,5 @@ def consign_and_preserve():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     admin.orders_delete(order_info.get("id"), order_info.get("trainNumber"))
 
-    ## admin删除用户
+    # admin删除用户
     admin.admin_delete_user(query.uid)

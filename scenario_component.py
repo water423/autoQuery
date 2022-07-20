@@ -407,13 +407,9 @@ def collect_and_enter(query: Query, order_id):
 
 
 # 查询order的consign并进行新增
-def extra_consign(
-        query: Query,
-        order_info: dict,
-
-):
+def extra_consign(query: Query, order_info: dict):
     # 查询当前order的consign
-    query.query_consign_by_order_id(query.uid)
+    query.query_consign_by_order_id(order_info.get("id"))
     # 新建consign
     consign_data = {
         "accountId": query.uid,
@@ -424,4 +420,4 @@ def extra_consign(
     }
     query.put_consign(consign_data)
     # 再次查询
-    query.query_consign_by_order_id(query.uid)
+    query.query_consign_by_order_id(order_info.get("id"))
