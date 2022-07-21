@@ -919,8 +919,8 @@ class AdminQuery(Query):
         # 发送请求、获取响应并出路
         response = self.session.post(url=url, headers=headers, json=payload)
 
-        if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+        if response.status_code != 200:  # 响应错误则忽略并打印日志
+            logger.warning(f"request for {url} failed. status code: {response.status_code} response data is {response.text}")
             return None
         logger.info(f"travel add success for {trip_id}!")
         return response.json()["data"]
