@@ -919,8 +919,8 @@ class AdminQuery(Query):
         # 发送请求、获取响应并出路
         response = self.session.post(url=url, headers=headers, json=payload)
 
-        if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+        if response.status_code != 200:  # 响应错误则忽略并打印日志
+            logger.warning(f"request for {url} failed. status code: {response.status_code} response data is {response.text}")
             return None
         logger.info(f"travel add success for {trip_id}!")
         return response.json()["data"]
@@ -980,8 +980,8 @@ class AdminQuery(Query):
         logger.info(f"travel delete success for {trip_id}!")
 
     # order相关增删改查
-    def orders_post(self, bought_date: str = "1655783404439", travel_date: str = "1501257600000",
-                    travel_time: str = "1367629320000", account_id: str = "4d2a46c7-71cb-4cf1-b5bb-b68406d9da6f",
+    def orders_post(self, account_id: str = "4d2a46c7-71cb-4cf1-b5bb-b68406d9da6f", bought_date: str = "1655783404439", travel_date: str = "1501257600000",
+                    travel_time: str = "1367629320000",
                     contacts_name: str = "Contacts_One", document_type: int = 1,
                     contacts_document_number: str = "DocumentNumber_One", train_number: str = "G1237",
                     coach_number: int = 1, seat_class: int = 2, seat_number: str = "FirstClass-30",

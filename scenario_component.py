@@ -108,14 +108,14 @@ def admin_operations():
     print(user_data)
     user_id = user_data["userId"]
     # 初始化用户联系人 没有联系人id无法删除 因此暂不添加
-    # for contact in AdminData.admin_data_user_contacts:
-    #     admin_query.contacts_post(
-    #         "67df7d6b-773c-44c9-8442-e8823a792095",
-    #         contact["contact_name"],
-    #         contact["document_type"],
-    #         contact["document_number"],
-    #         contact["phone_number"]
-    #     )
+    for contact in AdminData.admin_data_user_contacts:
+        admin_query.contacts_post(
+            user_id,
+            contact["contact_name"],
+            contact["document_type"],
+            contact["document_number"],
+            contact["phone_number"]
+        )
 
     # 进行Get查询信息
     admin_query.admin_get_all_routes()
@@ -156,16 +156,17 @@ def admin_operations():
         uuid.uuid1().hex,
         AdminData.admin_data_user["gender"]
     )
-    # 更新用户联系人 暂时无法更新，因为未返回联系人id
-    # for contact in AdminData.admin_data_user_contacts:
-    #     admin_query.contacts_put(
-    #         "",
-    #         user_id,
-    #         contact["contact_name"],
-    #         contact["document_type"],
-    #         contact["document_number"],
-    #         contact["phone_number"]
-    #     )
+    # 更新用户联系人
+    contacts = admin_query.query_contacts(user_id)
+    for contact in contacts:
+        admin_query.contacts_put(
+            contact.get("id"),
+            user_id,
+            contact.get("name"),
+            contact.get("documentType"),
+            contact.get("documentNumber"),
+            contact.get("phoneNumber")
+        )
 
     # 进行Get查询信息
     admin_query.admin_get_all_routes()
@@ -197,6 +198,11 @@ def admin_operations():
         admin_query.admin_delete_route(
             route_id
         )
+
+
+    # 删除contact
+    for contact in contacts:
+        admin_query.contacts_delete(contact.get("id"))
 
     # 删除用户
     admin_query.admin_delete_user(
