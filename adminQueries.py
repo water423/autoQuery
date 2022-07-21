@@ -980,8 +980,8 @@ class AdminQuery(Query):
         logger.info(f"travel delete success for {trip_id}!")
 
     # order相关增删改查
-    def orders_post(self, bought_date: str = "1655783404439", travel_date: str = "1501257600000",
-                    travel_time: str = "1367629320000", account_id: str = "4d2a46c7-71cb-4cf1-b5bb-b68406d9da6f",
+    def orders_post(self, account_id: str = "4d2a46c7-71cb-4cf1-b5bb-b68406d9da6f", bought_date: str = "1655783404439", travel_date: str = "1501257600000",
+                    travel_time: str = "1367629320000",
                     contacts_name: str = "Contacts_One", document_type: int = 1,
                     contacts_document_number: str = "DocumentNumber_One", train_number: str = "G1237",
                     coach_number: int = 1, seat_class: int = 2, seat_number: str = "FirstClass-30",
