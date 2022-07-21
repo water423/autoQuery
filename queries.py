@@ -294,7 +294,7 @@ class Query:
         return res_food_data
 
     # 查询联系人
-    def query_contacts(self, headers: dict = {}) -> List[str]:
+    def query_contacts(self, user_id: str = "",headers: dict = {}) -> List[str]:
         """
         返回联系人信息列表
         :param headers:
@@ -304,6 +304,8 @@ class Query:
             headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/contactservice/contacts/account/{self.uid}"
+        if user_id != "":
+            url = f"{self.address}/api/v1/contactservice/contacts/account/{user_id}"
 
         # 发送请求、获取响应并处理
         response = self.session.get(url=url, headers=headers)
