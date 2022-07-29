@@ -103,7 +103,7 @@ class Query:
 
         payload = {                                 # 请求的载荷（时间、起始地、目的地）
             "departureTime": time,
-            "startingPlace": place_pair[0],
+            "startPlace": place_pair[0],
             "endPlace": place_pair[1],
         }
 
@@ -142,13 +142,13 @@ class Query:
 
         payload = {
             "departureTime": time,
-            "startingPlace": place_pair[0],
+            "startPlace": place_pair[0],
             "endPlace": place_pair[1],
         }
 
         # 发送请求、获取响应并处理
         response = self.session.post(url=url, headers=headers, json=payload)
-
+        print(response.json())
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误
             logger.warning(
                 f"request for {url} failed. response data is {response.text}")
@@ -187,7 +187,7 @@ class Query:
 
         payload = {
             "departureTime": time,
-            "startingPlace": place_pair[0],
+            "startPlace": place_pair[0],
             "endPlace": place_pair[1],
         }
 
@@ -232,7 +232,7 @@ class Query:
 
         payload = {
             "departureTime": date,
-            "startingPlace": place_pair[0],
+            "startPlace": place_pair[0],
             "endPlace": place_pair[1],
         }
 
@@ -242,7 +242,7 @@ class Query:
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误
             logger.warning(
                 f"request for {url} failed. response data is {response.text}")
-            return None
+            return []
 
         data = response.json().get("data")                                      # 响应正确
 
@@ -615,14 +615,14 @@ class Query:
 
         # 普通查询和高级查询的返回值是不同的
         # {'tripId': {'type': 'D', 'number': '1345'},
-        #  'trainTypeId': 'DongCheOne', 'startingStation': 'Shang Hai', 'terminalStation': 'Su Zhou',
-        #  'startingTime': 1367622000000, 'endTime': 1367622960000,
+        #  'trainTypeName': 'DongCheOne', 'startingStation': 'Shang Hai', 'terminalStation': 'Su Zhou',
+        #  'startTime': 1367622000000, 'endTime': 1367622960000,
         #  'economyClass': 1073741822, 'confortClass': 1073741822,
         #  'priceForEconomyClass': '22.5', 'priceForConfortClass': '50.0'}
-        # {'tripId': 'D1345', 'trainTypeId': 'DongCheOne', 'fromStationName': 'Shang Hai', 'toStationName': 'Su Zhou',
+        # {'tripId': 'D1345', 'trainTypeName': 'DongCheOne', 'startStation': 'Shang Hai', 'endStation': 'Su Zhou',
         # 'stopStations': ['Shang Hai', 'Su Zhou'], 'priceForSecondClassSeat': '22.5',
         # 'numberOfRestTicketSecondClass': 1073741815, 'priceForFirstClassSeat': '50.0',
-        # 'numberOfRestTicketFirstClass': 1073741815, 'startingTime': 1367622000000, 'endTime': 1367622960000}
+        # 'numberOfRestTicketFirstClass': 1073741815, 'startTime': 1367622000000, 'endTime': 1367622960000}
         # 解析trip_info得到start end tripId等信息
         if type(trip_info.get("tripId")).__name__ == "dict":
             start = trip_info.get("startingStation")
@@ -634,8 +634,8 @@ class Query:
                 preserve_url = f"{self.address}/api/v1/preserveotherservice/preserveOther"
             trip_id = trip_id_info.get("type")+trip_id_info.get("number")
         else:
-            start = trip_info.get("fromStationName")
-            end = trip_info.get("toStationName")
+            start = trip_info.get("startStation")
+            end = trip_info.get("endStation")
             trip_id = trip_info.get("tripId")  # {'type': 'D', 'number': '1345'}
             if trip_id[0] == 'D' or trip_id[0] == 'G':  # 以D或者G开头的是preserve
                 preserve_url = f"{self.address}/api/v1/preserveservice/preserve"
