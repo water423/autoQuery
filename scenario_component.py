@@ -39,8 +39,8 @@ def data_init():
             admin_query.admin_add_travel(
                 InitData.init_train_trips_id[i],
                 InitData.train_types[i],
-                route_id,
-                InitData.travel_start_time
+                route_id
+                # InitData.travel_start_time_tick
             )
 
     # 初始化用户
@@ -91,8 +91,8 @@ def admin_operations():
             admin_query.admin_add_travel(
                 AdminData.admin_train_trips_id[i],
                 AdminData.train_types[i],
-                route_id,
-                AdminData.travel_start_time
+                route_id
+                # AdminData.travel_start_time
             )
 
     # 初始化用户
@@ -339,8 +339,8 @@ def admin_add_route_search(
     travel_data = query.admin_add_travel(
         AdminData.random_train_type_reflection[train_type],
         train_type,
-        route_id,
-        AdminData.travel_start_time
+        route_id
+        # AdminData.travel_start_time
     )
 
     trip_info = query_left_tickets_successfully(query, "normal", search_name_pair)

@@ -898,7 +898,7 @@ class AdminQuery(Query):
             # start_station_id: str = "",
             # stations_id: str = "",
             # terminal_station_id: str = "",
-            start_time: str = "",
+            start_time: str = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime()),
             # end_time: str = "",
             headers: dict = {}):
         logger.info(f"[admin_add_travel]: trip_id:{trip_id}")
@@ -909,11 +909,22 @@ class AdminQuery(Query):
         # 请求url
         url = f"{self.address}/api/v1/admintravelservice/admintravel"
 
+        # 获取起始点站
+        start_station_name = ""
+        terminal_station_name = ""
+        routes = self.admin_get_all_routes()
+        for route in routes:
+            if route.get("id") == route_id:
+                start_station_name = route.get("startStation")
+                terminal_station_name = route.get("endStation")
+
         payload = {                                 # 请求的载荷（时间、起始地、目的地）
             "routeId": route_id,
-            "startingTime": start_time,
-            "trainTypeId": train_type_id,
-            "tripId": trip_id
+            "startTime": start_time,
+            "trainTypeName": train_type_id,
+            "tripId": trip_id,
+            "startStationName": start_station_name,
+            "terminalStationName": terminal_station_name,
         }
 
         # 发送请求、获取响应并出路
@@ -945,11 +956,22 @@ class AdminQuery(Query):
         # 请求url
         url = f"{self.address}/api/v1/admintravelservice/admintravel"
 
+        # 获取起始点站
+        start_station_name = ""
+        terminal_station_name = ""
+        routes = self.admin_get_all_routes()
+        for route in routes:
+            if route.get("id") == route_id:
+                start_station_name = route.get("startStation")
+                terminal_station_name = route.get("endStation")
+
         payload = {  # 请求的载荷（时间、起始地、目的地）
             "routeId": route_id,
-            "startingTime": start_time,
-            "trainTypeId": train_type_id,
-            "tripId": trip_id
+            "startTime": start_time,
+            "trainTypeName": train_type_id,
+            "tripId": trip_id,
+            "startStationName": start_station_name,
+            "terminalStationName": terminal_station_name,
         }
 
         # 发送请求、获取响应并出路

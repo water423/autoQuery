@@ -3,6 +3,8 @@
 class Constant:
     ts_address = "http://139.196.152.44:32677"
     # ts_address = "http://10.176.122.156:32677"
+    ts_address = "http://120.53.105.200:30467"
+
     admin_username = "admin"
     admin_pwd = "222222"
     user_username = "fdse_microservice"
@@ -28,9 +30,9 @@ class InitData:
         "GaoTieOne","GaoTieTwo","DongCheOne","ZhiDa","TeKuai","KuaiSu"
     ]
     init_train_trips_id = [
-        "G8001", "G8002", "D8003", "Z8004", "T8005", "K8006"
+        "G9001", "G9002", "D8003", "Z8004", "T8005", "K8006"
     ]
-    travel_start_time = "1367929200000"
+    travel_start_time_tick = "1367929200000"
 
     init_user = {
             "document_type": "1",
