@@ -320,6 +320,8 @@ def admin_add_route_search(
         miss_station_name: str = "Gui Yang Bei",
 ):
     query = AdminQuery(Constant.ts_address)
+    query.login("admin", "222222")
+
     # 添加缺失的站点
     query.stations_post(
         miss_station_id,
@@ -347,7 +349,11 @@ def admin_add_route_search(
         # AdminData.travel_start_time
     )
 
-    trip_info = query_left_tickets_successfully(query, "normal", search_name_pair)
+    if train_type == "D" or train_type == "G":
+        query_type = "high_speed"
+    else:
+        query_type = "normal"
+    trip_info = query_left_tickets_successfully(query, query_type, search_name_pair)
     return trip_info
 
 
