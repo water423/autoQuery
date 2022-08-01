@@ -238,9 +238,11 @@ def new_user() -> Query:
 # 用户登陆并成功查询到余票(普通查询):输入起始站and终点站，日期以及查询类型
 # 查询类型： normal , high_speed , cheapest , min_station , quickest
 def query_left_tickets_successfully(query: Query,
-                                    query_type: str = "normal", place_pair: tuple = (), date: str = "") -> dict:
+                                    query_type: str = "normal", place_pair: tuple = (),
+                                    date: str = time.strftime("%Y-%m-%d", time.localtime()) + " 00:00:00") -> dict:
     # 查询余票(确定起始站、终点站以及列车类型)
     # 类型：普通票、高铁票、高级查询（最快、最少站、最便宜）
+    print(date)
     all_trip_info = []  # 成功查询的结果
     if query_type == "normal":
         all_trip_info = query.query_normal_ticket(place_pair=place_pair, time=date)
@@ -263,7 +265,7 @@ def query_left_tickets_successfully(query: Query,
 def query_left_tickets_unsuccessfully(query: Query,
                                       query_type: str = "normal",
                                       place_pair: tuple = ("Chong Qing Bei", "Gui Yang Bei"),
-                                      date: str = time.strftime("%Y-%m-%d", time.localtime())):
+                                      date: str = time.strftime("%Y-%m-%d", time.localtime()) + " 00:00:00"):
     # 查询余票(确定起始站、终点站以及列车类型)
     # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
     all_trip_info = []
@@ -286,7 +288,9 @@ def query_left_tickets_unsuccessfully(query: Query,
 
 # 预定成功且刷新订单
 # 输入 query对象，预定的trip信息，预定的日期，刷新所有订单后返回的状态(如果不输入默认返回order界面的订单即未付款/已付款未取票)
-def preserve_and_refresh(query: Query, trip_info: dict, date: str = time.strftime("%Y-%m-%d", time.localtime()), types: tuple = tuple([0, 1])) -> List[dict]:
+def preserve_and_refresh(query: Query, trip_info: dict,
+                         date: str = time.strftime("%Y-%m-%d", time.localtime()),
+                         types: tuple = tuple([0, 1])) -> List[dict]:
     # 订票
     query.preserve(trip_info=trip_info, date=date)
     # refresh刷新订单并返回所有特定状态的订单信息，注意需要分两次返回，因为高铁动车与其他车型是两个不同的接口
