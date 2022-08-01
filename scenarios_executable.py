@@ -67,6 +67,8 @@ def preserve_unsuccessfully():
     order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
     order_id = order_info.get("id")
 
+    # 后续删除添加的站点
+
 
 # 正常查票订票检票进站
 def routine0():
