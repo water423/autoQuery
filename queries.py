@@ -99,7 +99,7 @@ class Query:
             place_pair = random.choice(place_pairs)
 
         if time == "":
-            time = datestr
+            time = datestr + " 00:00:00"
 
         payload = {                                 # 请求的载荷（时间、起始地、目的地）
             "departureTime": time,
@@ -138,7 +138,7 @@ class Query:
             place_pair = random.choice(place_pairs)
 
         if time == "":
-            time = datestr
+            time = datestr + " 00:00:00"
 
         payload = {
             "departureTime": time,
@@ -183,7 +183,7 @@ class Query:
             place_pair = random.choice(place_pairs)
 
         if time == "":
-            time = datestr
+            time = datestr + " 00:00:00"
 
         payload = {
             "departureTime": time,
@@ -228,7 +228,7 @@ class Query:
             place_pair = random.choice(place_pairs)
 
         if date == "":
-            date = datestr
+            date = datestr + " 00:00:00"
 
         payload = {
             "departureTime": date,
