@@ -33,10 +33,10 @@ def preserve_successfully(query: Query = None) -> List[dict]:
     print("[query_type] : " + query_type)
 
     # 查询余票
-    date = time.strftime("%Y-%m-%d", time.localtime())  # 默认为选择当日日期，因为query函数无法找到过去日期的票
-    trip_info = query_left_tickets_successfully(query, query_type, query_place_pair, date)
+    date = time.strftime("%Y-%m-%d", time.localtime())   # 默认为选择当日日期，因为query函数无法找到过去日期的票
+    trip_info = query_left_tickets_successfully(query, query_type, query_place_pair, date + " 00:00:00")
     # 订票并刷新订单
-    all_orders_info = preserve_and_refresh(query, trip_info, types=tuple([0]))  # 返回状态0的订单 not paid
+    all_orders_info = preserve_and_refresh(query, trip_info, date, types=tuple([0]))  # 返回状态0的订单 not paid
 
     # 退出并删除用户（暂时不可用）
     userid_deleted = query.uid
@@ -66,6 +66,8 @@ def preserve_unsuccessfully():
     all_orders_info = preserve_and_refresh(query, trip_info, types=tuple([0]))  # 返回状态0的订单 not paid
     order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
     order_id = order_info.get("id")
+
+    # 后续删除添加的站点
 
 
 # 正常查票订票检票进站
