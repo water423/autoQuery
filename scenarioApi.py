@@ -3,11 +3,9 @@ from concurrent.futures.thread import ThreadPoolExecutor
 
 from scenario_component import admin_operations, data_init
 import time
-import threading
 
 from scenarios_executable import routine0, routine1, rebook_twice_and_cancel, search_failed_and_preserve, \
     consign_and_preserve
-from test import admin_get
 
 
 class ScenarioAPI:
@@ -18,7 +16,6 @@ class ScenarioAPI:
         "rebook_fail_flow": rebook_twice_and_cancel,
         "search_fail_add": search_failed_and_preserve,
         "consign_preserve": consign_and_preserve,
-        "admin_get": admin_get
     }
     peak_start_time = ""
     peak_end_time = ""
