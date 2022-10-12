@@ -280,21 +280,27 @@ class Query:
         if place_pair == ():
             place_pair = random.choice(place_pairs_origin)
 
-        url = f"{self.address}/api/v1/foodservice/foods/2021-07-14/{place_pair[0]}/{place_pair[1]}/{train_num}"
+        url = f"{self.address}/api/v1/foodservice/foods/{datestr}/{place_pair[0]}/{place_pair[1]}/{train_num}"
 
         # 发送请求、获取响应并处理
         response = self.session.get(url=url, headers=headers)
-        if response.status_code != 200 or response.json().get("data") is None:
+        if response.status_code != 200:  # or response.json().get("data") is None
             logger.warning(
                 f"query food failed, response data is {response.text}")
             return None
+        else:
+            if response.json().get("data") is None:
+                logger.info(
+                    f"query food successfully, but no food available.")
+                print("[query food successfully][no food queried]")
+                return None
         res_food_data = response.json().get("data")
 
         # food 是什么不会对后续调用链有影响，因此查询后返回一个固定数值
         return res_food_data
 
     # 查询联系人
-    def query_contacts(self, user_id: str = "",headers: dict = {}) -> List[str]:
+    def query_contacts(self, user_id: str = "",headers: dict = {}) -> List:
         """
         返回联系人信息列表
         :param headers:
@@ -455,10 +461,10 @@ class Query:
             "from": result["from"],
             "to": result["to"],
             "orderId": result["orderId"],
-            "consignee": "32",
-            "phone": "12345677654",
-            "weight": "32",
-            "id": "",
+            "consignee": result["consignee"],
+            "phone": result["phone"],
+            "weight": result["weight"],
+            "id": result["id"],
             "isWithin": False
         }
 
@@ -466,6 +472,7 @@ class Query:
         res = self.session.put(url=url, headers=headers,
                                json=consignload)
         order_id = result["orderId"]
+        print(res.text)
         if res.status_code == 200 or res.status_code == 201:
             logger.info(f"order {order_id} put consign success")
         else:
@@ -515,6 +522,26 @@ class Query:
             return None
 
         return order_id
+
+    # 计算如果退票的情况下退款额度
+    def cancel_refund_calculate(self, order_id, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
+        # 计算扣款
+        refound_url = f"{self.address}/api/v1/cancelservice/cancel/refound/{order_id}"
+        res_refound = self.session.get(url=refound_url, headers=headers)
+        if res_refound.status_code == 200 and res_refound.json()["status"] == 1:
+            logger.info("success to query refund data")
+        else:
+            logger.warning(
+                f"[{res_refound.json()['msg']}]")
+            return
+        res_data = res_refound.json()["data"]
+        refound = str_to_float(res_data)
+        if refound == None:
+            logger.error("convert refound string to float failed")
+            return
+        return refound
 
     # 取消订单（输入订单id 返回已被取消的订单id）
     def cancel_order(self, order_id, headers: dict = {}):
@@ -604,9 +631,36 @@ class Query:
 
         return r.text
 
+    # 支付差价并提交改签
+    def calculate_difference_and_submit(self, old_order_id, old_trip_id, new_trip_id, new_date, new_seat_type,
+                                        headers: dict = {}):
+        print("支付差价并提交改签")
+        if headers == {}:
+            headers = self.session.headers
+            # 准备请求内容
+        url = f"{self.address}/api/v1/rebookservice/rebook/difference"
+
+        payload = {
+            "oldTripId": old_trip_id,
+            "orderId": old_order_id,
+            "tripId": new_trip_id,
+            "date": new_date,   # 2022-10-10格式
+            "seatType": new_seat_type
+        }
+
+        r = self.session.post(url=url, json=payload, headers=headers)
+        print(r.json())
+        if r.status_code == 200:
+            logger.info(r.text)
+        else:
+            logger.warning(
+                f"Request Failed: status code: {r.status_code}, {r.text}")
+
+        return r.text
+
     # 订票服务（包含：列车及座位等必要信息、支付方式、是否需要食物、是否需要托运行李）
     # query查询到trip信息随机选择一个trip并传入此函数，则通过train_type就可以判断是否是高铁动车票，date与查询日期一致
-    def preserve(self, trip_info: dict, date: str = "", headers: dict = {}):
+    def preserve(self, trip_info: dict, date: str = "", seat_type: str = "", headers: dict = {}):
         # start: str, end: str, trip_ids: List = [], is_high_speed: bool = True
         if headers == {}:
             headers = self.session.headers
@@ -625,7 +679,7 @@ class Query:
         # 'numberOfRestTicketFirstClass': 1073741815, 'startTime': 1367622000000, 'endTime': 1367622960000}
         # 解析trip_info得到start end tripId等信息
         if type(trip_info.get("tripId")).__name__ == "dict":
-            start = trip_info.get("startingStation")
+            start = trip_info.get("startStation")
             end = trip_info.get("terminalStation")
             trip_id_info = trip_info.get("tripId")   # {'type': 'D', 'number': '1345'}
             if trip_id_info.get("type") == 'D' or trip_id_info.get("type") == 'G':  # 以D或者G开头的是preserve
@@ -652,8 +706,9 @@ class Query:
             "tripId": trip_id
         }
 
-        # 选择座位
-        seat_type = random_from_list(["2", "3"])
+        # 选择座位，座位2比座位3更贵
+        if seat_type == "":   # 未指定，为默认值，则随机
+            seat_type = random_from_list(["2", "3"])
         base_preserve_payload["seatType"] = seat_type
 
         # 选择联系人：必选项
@@ -667,7 +722,7 @@ class Query:
             logger.info("choose new contact")
             contacts_id = self.add_contact()  # 新增联系人并返回contactId
             base_preserve_payload["contactsId"] = contacts_id
-        else:
+        else:   # 在实际测试过程中，由于每个场景都会新建用户（默认无用户）所以每次都需要新建联系人
             logger.info("choose contact already existed")
             contacts_result = self.query_contacts()
             # 注意如果联系人为空就新建一个
@@ -680,22 +735,22 @@ class Query:
                 base_preserve_payload["contactsId"] = contacts_id
 
         # 随机选择是否需要食物
-        # need_food = random_boolean()
-        need_food = False  # 获取food接口有问题
-        if need_food:
+        need_food = random_boolean()  # 获取food接口有问题
+        # 查询食物的参数为 place_pair train_num即tripID
+        food_result = self.query_food(place_pair=(start, end), train_num=trip_id)
+        if need_food and food_result is not None:
             logger.info("need food")
-            # 查询食物的参数为 place_pair train_num即tripID
-            food_result = self.query_food(place_pair=(start, end), train_num =trip_id)
             food_dict = random_from_list(food_result)
             base_preserve_payload.update(food_dict)
         else:
+            need_food = False
             logger.info("not need food")
             base_preserve_payload["foodType"] = "0"
 
         # 随机选择是否需要保险
         need_assurance = random_boolean()
+        assurance_result = self.query_assurances()  # 系统内置只有一种assurance
         if need_assurance:  # 如果需要保险则查询保险并使得assurance参数为1，否则默认为0
-            assurance_result = self.query_assurances()  # 系统内置只有一种assurance
             # assurance_dict = random_from_list(assurance_result)
             base_preserve_payload["assurance"] = 1
 
@@ -703,8 +758,8 @@ class Query:
         need_consign = random_boolean()
         if need_consign:
             consign = {
-                "consigneeName": random_str(),
-                "consigneePhone": random_phone(),
+                "consigneeName": "consign_test",
+                "consigneePhone": "19921940983",
                 "consigneeWeight": random.randint(1, 10),
                 "handleDate": date
             }
@@ -730,11 +785,12 @@ class Query:
 
         # 最后删除新建的联系人，保证可复用性
         # if new_contact:
+        #     print("need to delete new contact")
         #     self.login("admin", "222222")
         #     contacts_delete = getattr(self, 'contacts_delete')
         #     contacts_delete(contact_id=contacts_id)
 
-        return
+        return new_contact, contacts_id
 
     # 以下三个函数分别通过三种信息查询consign
     def query_consign_by_account_id(self, account_id, headers: dict = {}):
@@ -742,26 +798,29 @@ class Query:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/account/{account_id}"
         r = self.session.get(url=url, headers=headers)
+        print(r.json())
         if r.status_code == 200 and r.json()["status"] == 1:
             logger.info("success to query consign")
             res_data = r.json()["data"]
             return res_data
         else:
             logger.warning(
-                f"faild to query consign with status_code: {r.status_code}")
+                f"faild to query consign with status_code: {r.json()['msg']}")
 
     def query_consign_by_order_id(self, order_id, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/order/{order_id}"
         r = self.session.get(url=url, headers=headers)
-        if r.status_code == 200 and r.json()["status"] == 1:
+        print(r.json())
+        if r.status_code == 200 and r.json()["status"] == 1:   # 如果为空返回0
             logger.info("success to query consign")
             res_data = r.json()["data"]
             return res_data
         else:
             logger.warning(
-                f"faild to query consign with status_code: {r.status_code}")
+                f"faild to query consign with status_code: {r.json()['msg']}")
+            return None
 
 
     def query_consign_by_consignee(self, consignee, headers: dict = {}):
@@ -777,26 +836,7 @@ class Query:
             logger.warning(
                 f"faild to query consign with status_code: {r.status_code}")
 
-    # 计算如果退票的情况下退款额度
-    def cancel_refound_calculate(self, order_id, headers: dict = {}):
-        if headers == {}:
-            headers = self.session.headers
-        # 计算扣款
-        refound_url = f"{self.address}/api/v1/cancelservice/cancel/refound/{order_id}"
-        res_refound = self.session.get(url=refound_url, headers=headers)
-        if res_refound.status_code == 200 and res_refound.json()["status"] == 1:
-            logger.info("success to query refound data")
 
-        else:
-            logger.warning(
-                f"faild to query admin travel with status_code: {res_refound.status_code}")
-            return
-        res_data = res_refound.json()["data"]
-        refound = str_to_float(res_data)
-        if refound == None:
-            logger.error("convert refound string to float failed")
-            return
-        return refound
 
 
 

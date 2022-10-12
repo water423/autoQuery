@@ -1,9 +1,9 @@
 
 
 class Constant:
-    ts_address = "http://139.196.152.44:32677"
-    # ts_address = "http://10.176.122.156:32677"
-    ts_address = "http://120.53.105.200:30467"
+    # ts_address = 'http://139.196.228.58:32677'   # 阿里云
+    # ts_address = "http://10.176.122.155:32677"  # 学院云
+    ts_address = 'http://10.176.122.1:32677'  # HD学院云
 
     admin_username = "admin"
     admin_pwd = "222222"
@@ -64,31 +64,38 @@ class InitData:
         }
     ]
 
+    # 下面记录在新增的过程中产生的route travel等对应的标识(id等)
+    init_stations_ids = []
+    init_routes_ids = []
+
+
+
 
 class AdminData:
     admin_stations_data = [
         ("taiyuannan", "Tai Yuan Nan", 3),
-        ("zhengzhoudong", "Zheng Zhou Dong", 5),
-        ("hankou", "Han Kou", 5),
-        ("changshanan", "Chang Sha Nan", 3),
-        ("guangzhounan", "Guang Zhou Nan", 5),
-        ("shenzhenbei", "Shen Zhen Bei", 5),
+        # ("zhengzhoudong", "Zheng Zhou Dong", 5),
+        # ("hankou", "Han Kou", 5),
+        # ("changshanan", "Chang Sha Nan", 3),
+        # ("guangzhounan", "Guang Zhou Nan", 5),
+        # ("shenzhenbei", "Shen Zhen Bei", 5),
         ("futian", "Fu Tian", 3),
         ("jiulong", "Jiu Long", 5)
     ]
-    station_list = "taiyuannan,zhengzhoudong,hankou,changshanan,guangzhounan,shenzhenbei,futian,jiulong"
-    distance_list = "0,300,600,850,1450,1600,1660,1720"
+    # station_list = "taiyuannan,zhengzhoudong,hankou,changshanan,guangzhounan,shenzhenbei,futian,jiulong"
+    station_list = "taiyuannan,futian,jiulong"
+    distance_list = "0,300,1660"
     admin_route_data = [
-        (station_list, distance_list, "fengtai", "chengdudong")
+        (station_list, distance_list, "taiyuannan", "jiulong")
     ]
     train_types = [
-        "GaoTieOne","GaoTieTwo","DongCheOne","ZhiDa","TeKuai","KuaiSu"
+        "GaoTieOne","DongCheOne","ZhiDa"
     ]
     admin_train_trips_id = [
-        "G7001", "G7002", "D7003", "Z7004", "T7005", "K7006"
+        "G7001", "D7003", "Z7004"
     ]
     admin_train_update_trip_id = [
-        "G7001", "G7002", "D7003", "Z7004", "T7005", "K7006"
+        "G7001", "D7003", "Z7004"
     ]
     travel_start_time = "1367989200000"
     travel_update_start_time = "1367989800000"

@@ -4,18 +4,19 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from scenario_component import admin_operations, data_init
 import time
 
-from scenarios_executable import routine0, routine1, rebook_twice_and_cancel, search_failed_and_preserve, \
-    consign_and_preserve
+from scenarios_executable import normal_routine, rebook_routine, rebook_twice_and_cancel, search_failed_and_preserve, \
+    consign_and_preserve, cancel_routine
 
 
 class ScenarioAPI:
     scenarios = {
         "admin_operations": admin_operations,
-        "normal_flow": routine0,
-        "rebook_flow": routine1,
-        "rebook_fail_flow": rebook_twice_and_cancel,
-        "search_fail_add": search_failed_and_preserve,
-        "consign_preserve": consign_and_preserve,
+        "normal_flow": normal_routine,
+        "rebook_flow": rebook_routine,
+        "cancel_flow": cancel_routine,
+        "rebook_twice_fail_flow": rebook_twice_and_cancel,
+        "search_fail_add_flow": search_failed_and_preserve,
+        "consign_flow": consign_and_preserve,
     }
     peak_start_time = ""
     peak_end_time = ""
@@ -104,47 +105,6 @@ class ScenarioAPI:
             # t = threading.Thread(target=func, args=())
             # t.start()
         self.pool.shutdown()
-    # def run(
-    #     scenario,
-    #     peak_start_time,
-    #     peak_end_time,
-    #     peak_qps,
-    #     valley_start_time,
-    #     valley_end_time,
-    #     valley_qps,
-    #     init_qps,
-    #     runtime: float = 3600000):
-    #     start = time.time()
-    #     print(f"start time tick:{start}")
-    #     func = scenarios[scenario]
-    #     init_interval = 1/init_qps
-    #     peak_interval_extra = 1/(peak_qps-init_qps)
-    #     valley_interval = 1/valley_qps
-    #
-    #
-    #
-    #     sched = BlockingScheduler()
-    #     # 默认qps添加
-    #     sched.add_job(
-    #         func,
-    #         trigger='interval',
-    #         seconds=init_interval
-    #     )
-    #     sched.add_job(
-    #         func,
-    #         trigger="cron",
-    #         seconds=peak_interval_extra,
-    #         start_date=peak_start_time,
-    #         end_date=peak_end_time
-    #     )
-    # sched.add_job(
-    #     func,
-    #     trigger="interval",
-    #     seconds=peak_interval,
-    #     start_date=peak_start_time,
-    #     end_date=peak_end_time
-    # )
-    # sched.start()
 
 
 if __name__ == '__main__':
@@ -157,7 +117,7 @@ if __name__ == '__main__':
         # 3 表示peak和valley均有 读入参数为 scenario type init_qps endtimeYMD endtimeHMS peak_start_time peak_end_time peak_qps valley_start_time valley_end_time valley_qps
         # 其中endtime为%Y-%m-%d %H:%M:%S格式 分成endtimeYMD和endtimeHMS两个参数
         # 各种end\start time为 %H:%M:%S格式
-        data_init()
+        # data_init()
         if type == '0':
             init_qps, endtimeYMD, endtimeHMS = sys.argv[3:6]
             init_qps = float(init_qps)
