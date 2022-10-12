@@ -5,10 +5,11 @@ from queries import Query
 logger = logging.getLogger("auto-queries")
 datestr = time.strftime("%Y-%m-%d", time.localtime())
 
+
 class AdminQuery(Query):
 
     # station相关增删改查
-    def stations_post(self, station_id: str = "", name: str = "", stay_time: int = 15, headers: dict = {}) -> str:
+    def stations_post(self,name: str = "", stay_time: int = 15, headers: dict = {}) -> dict:
         """
         添加车站stations
         :param station_id: 新增station的id
@@ -17,7 +18,7 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
-        logger.info(f"[stations_post]: station_id:{station_id}")
+        logger.info(f"[stations_post]: station_name:{name}")
         if headers == {}:
             headers = self.session.headers
         # 请求url
@@ -25,7 +26,6 @@ class AdminQuery(Query):
 
         # 请求载荷，对应@requestbody注解
         payload = {
-            "id": station_id,
             "name": name,
             "stayTime": stay_time,
         }
@@ -40,10 +40,10 @@ class AdminQuery(Query):
 
         # 返回值为新增的车站信息
         data = response.json().get("data")
-        print(data)
+        print("new Station:" + str(data))
         return data
 
-    def stations_get(self, headers: dict = {}) -> str:
+    def stations_get(self, headers: dict = {}) -> list:
         """
         获取所有车站信息
         :param headers: 请求头
@@ -66,7 +66,7 @@ class AdminQuery(Query):
         print(data)
         return data
 
-    def stations_put(self, station_id: str = "", name: str = "", stay_time: int = 15, headers: dict = {}) -> str:
+    def stations_put(self, station_id: str = "", name: str = "", stay_time: int = 15, headers: dict = {}):
         """
         修改某一车站信息
         :param station_id: station的id
@@ -98,16 +98,14 @@ class AdminQuery(Query):
             return None
 
         # 返回值为修改后的车站信息
-        data = response.json().get("data")  # 用string形式返回
+        data = response.json().get("data")
         print(data)
         return data
 
-    def stations_delete(self, station_id: str = "", name: str = "", stay_time: int = 15, headers: dict = {}) -> str:
+    def stations_delete(self, station_id: str = "", headers: dict = {}) -> str:
         """
         删除某一车站信息
         :param station_id: 删除station的id
-        :param name: 删除station的名称（可以不正确）
-        :param stay_time: 删除station的的停靠时间（可以不正确）
         :param headers: 请求头
         :return
         """
@@ -115,19 +113,12 @@ class AdminQuery(Query):
         if headers == {}:
             headers = self.session.headers
         # 请求url
-        url = f"{self.address}/api/v1/adminbasicservice/adminbasic/stations"
-
-        # 请求载荷，对应@requestbody注解
-        payload = {
-            "id": station_id,  # 用于检索车站
-            "name": name,
-            "stayTime": stay_time,
-        }
+        url = f"{self.address}/api/v1/adminbasicservice/adminbasic/stations/" + station_id
 
         # 发送请求、获取响应
         # 对于此delete请求而言，如果输入的payload代表的车站(由id决定)不存在则删除车站会抛出异常
         # {"status": 0, "msg": "Station not exist", "data": null}
-        response = self.session.delete(url=url, headers=headers, json=payload)
+        response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
             logger.warning(f"request for {url} failed. response data is {response.text}")
@@ -818,6 +809,7 @@ class AdminQuery(Query):
 
     def admin_update_user(
             self,
+            account_id: str = "321201200005260021",
             document_type: str = "",
             document_num: str = "",
             email: str = "",
@@ -834,6 +826,7 @@ class AdminQuery(Query):
         url = f"{self.address}/api/v1/adminuserservice/users"
 
         payload = {
+            "userId": account_id,
             "userName": username,
             "password": password,
             "gender": gender,
@@ -848,7 +841,7 @@ class AdminQuery(Query):
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
             logger.warning(f"request for {url} failed. response data is {response.text}")
             return None
-        logger.info(f"travel update success for {username}!")
+        logger.info(f"user add success for {username}!")
 
     def admin_delete_user(
             self,
@@ -864,10 +857,11 @@ class AdminQuery(Query):
         # 发送请求、获取响应并出路
         response = self.session.delete(url=url, headers=headers)
 
-        if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
+        # 正常的返回值{"status":1,"msg":"DELETE SUCCESS","data":null} ， data中为null
+        if response.status_code != 200:
             logger.warning(f"request for {url} failed. response data is {response.text}")
             return None
-        logger.info(f"travel delete success for {user_id}!")
+        logger.info(f"user delete success for {user_id}!")
 
     def admin_get_all_travels(self, headers: dict = {}):
         logger.info(f"[admin_get_all_travels]: admin_get")
@@ -934,7 +928,7 @@ class AdminQuery(Query):
             logger.warning(f"request for {url} failed. status code: {response.status_code} response data is {response.text}")
             return None
         logger.info(f"travel add success for {trip_id}!")
-        return response.json()["data"]
+        return response.json()["data"]    # 目前的方法是不返回值,为null
 
     def admin_update_travel(
             self,

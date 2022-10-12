@@ -12,10 +12,9 @@ logger = logging.getLogger("data_init")
 highspeed_weights = {True: 60, False: 40}
 datestr = time.strftime("%Y-%m-%d", time.localtime())
 
+
 # admin相关增删改查：post -> get -> update -> get -> delete
 def data_init():
-    # 1. 添加新的站点、路线、车次
-    # 2. 添加新的用户
     # 初始化管理员
     admin_query = AdminQuery(Constant.ts_address)
     admin_query.login(Constant.admin_username, Constant.admin_pwd)
@@ -23,7 +22,7 @@ def data_init():
     for station_data in InitData.init_stations_data:
         admin_query.stations_post(
             station_data[0],
-            station_data[1],
+            # station_data[1],
             station_data[2]
         )
     # 初始化路线信息
@@ -63,6 +62,11 @@ def data_init():
         )
 
 
+# 对于data_init清空数据
+def data_init_delete():
+    print('xxxx')
+
+
 def admin_operations():
     # 1. 添加新的站点、路线、车次
     # 2. 添加新的用户
@@ -73,7 +77,7 @@ def admin_operations():
     for station_data in AdminData.admin_stations_data:
         admin_query.stations_post(
             station_data[0],
-            station_data[1],
+            # station_data[1],
             station_data[2]
         )
     # 初始化路线信息
@@ -118,23 +122,30 @@ def admin_operations():
         )
 
     # 进行Get查询信息
+    print("执行Get操作")
     admin_query.admin_get_all_routes()
     admin_query.configs_get()
     admin_query.trains_get()
-    admin_query.stations_get()
+    all_stations = admin_query.stations_get()  # station post是没有返回值的不返回id，所以需要获取所有然后筛选
     admin_query.contacts_get()
     admin_query.orders_get()
     admin_query.prices_get()
     admin_query.admin_get_all_travels()
     admin_query.admin_get_all_users()
 
+    print("执行update操作")
     # 执行更新操作
     for station_data in AdminData.admin_stations_data:
-        admin_query.stations_put(
-            station_data[0],
-            station_data[1],
-            station_data[2]
-        )
+        # 利用name进行查找对应的id(在系统中，重复添加name会报错)
+        for s in all_stations:
+            s_name = s["name"]
+            if s_name == station_data[0]:   # [0] [1]为name [2]为stay time
+                admin_query.stations_put(  # 参数station id,station name,stay time
+                    s["id"],
+                    station_data[0],
+                    station_data[2]
+                )
+        print(str(station_data[0]) + "update成功")
     # 更新路线信息
     for route_id in route_id_list:
         # 更新车次
@@ -146,14 +157,14 @@ def admin_operations():
                 AdminData.travel_update_start_time
             )
 
-    # 更新用户
+    # 更新用户(报错)
     admin_query.admin_update_user(
+        user_data["userId"],
         AdminData.admin_data_user["document_type"],
         AdminData.admin_data_user["document_num"],
         AdminData.admin_data_user["email"],
         AdminData.admin_data_user["password"],
-        # AdminData.admin_data_user["username"],
-        uuid.uuid1().hex,
+        AdminData.admin_data_user["username"],
         AdminData.admin_data_user["gender"]
     )
     # 更新用户联系人
@@ -169,6 +180,7 @@ def admin_operations():
         )
 
     # 进行Get查询信息
+    print("更新之后再次进行Get查询")
     admin_query.admin_get_all_routes()
     admin_query.configs_get()
     admin_query.trains_get()
@@ -179,14 +191,16 @@ def admin_operations():
     admin_query.admin_get_all_travels()
     admin_query.admin_get_all_users()
 
+    print("执行DELETE操作")
     # 删除添加的信息
-    # 删除站点
+    # 删除站点，同样需要寻找
     for station_data in AdminData.admin_stations_data:
-        admin_query.stations_delete(
-            station_data[0],
-            station_data[1],
-            station_data[2]
-        )
+        # 利用name进行查找对应的id(在系统中，重复添加name会报错)
+        for s in all_stations:
+            s_name = s["name"]
+            if s_name == station_data[0]:  # [0]为name [2]为stay time
+                admin_query.stations_delete(s["id"])
+        print(str(station_data[0]) + "删除成功")
 
     # 删除车次和路线
     for route_id in route_id_list:
@@ -199,7 +213,6 @@ def admin_operations():
             route_id
         )
 
-
     # 删除contact
     for contact in contacts:
         admin_query.contacts_delete(contact.get("id"))
@@ -210,6 +223,7 @@ def admin_operations():
     )
 
     # 进行Get查询信息
+    print("删除之后进行GET查询")
     admin_query.admin_get_all_routes()
     admin_query.configs_get()
     admin_query.trains_get()
@@ -242,7 +256,6 @@ def query_left_tickets_successfully(query: Query,
                                     date: str = time.strftime("%Y-%m-%d", time.localtime()) + " 00:00:00") -> dict:
     # 查询余票(确定起始站、终点站以及列车类型)
     # 类型：普通票、高铁票、高级查询（最快、最少站、最便宜）
-    print(date)
     all_trip_info = []  # 成功查询的结果
     if query_type == "normal":
         all_trip_info = query.query_normal_ticket(place_pair=place_pair, time=date)
@@ -264,7 +277,7 @@ def query_left_tickets_successfully(query: Query,
 # 输入一个不存在的起始站点或终止站点(通过控制输入值来保证查不到travel)
 def query_left_tickets_unsuccessfully(query: Query,
                                       query_type: str = "normal",
-                                      place_pair: tuple = ("Chong Qing Bei", "Gui Yang Bei"),
+                                      place_pair: tuple = ("Chong Qing Bei", "Gui Yang Bei"),   # 此处是大写有空格的
                                       date: str = time.strftime("%Y-%m-%d", time.localtime()) + " 00:00:00"):
     # 查询余票(确定起始站、终点站以及列车类型)
     # 查票失败：系统中没有输入的起始站、终点站所以找不到对应trip，返回值为空
@@ -290,15 +303,22 @@ def query_left_tickets_unsuccessfully(query: Query,
 # 输入 query对象，预定的trip信息，预定的日期，刷新所有订单后返回的状态(如果不输入默认返回order界面的订单即未付款/已付款未取票)
 def preserve_and_refresh(query: Query, trip_info: dict,
                          date: str = time.strftime("%Y-%m-%d", time.localtime()),
+                         seat_type: str = "",
                          types: tuple = tuple([0, 1])) -> List[dict]:
-    # 订票
-    query.preserve(trip_info=trip_info, date=date)
+    # 订票(返回是否新建了联系人，因为要删掉)
+    new_contact, contacts_id = query.preserve(trip_info=trip_info, date=date, seat_type=seat_type)
+    if new_contact is True:
+        print("[contact delete][new contact during preserve and delete successfully]")
+        admin = AdminQuery(Constant.ts_address)
+        admin.login(Constant.admin_username, Constant.admin_pwd)
+        admin.contacts_delete(contact_id=contacts_id)
+
     # refresh刷新订单并返回所有特定状态的订单信息，注意需要分两次返回，因为高铁动车与其他车型是两个不同的接口
     # 注意此处调用query_orders_all_info接口来获取所有信息，而不是query_orders
     res_high_speed = query.query_orders_all_info(types=types)
     res_normal = query.query_orders_all_info(types=types, query_other=True)
     res = res_high_speed + res_normal
-    print(res)
+    print("[all orders queried] " + str(res))
     return res
 
 
@@ -316,21 +336,19 @@ def search_route2staion(query, search_id_pair: list = ["chongqingbei", "guiyangb
 def admin_add_route_search(
         search_id_pair: tuple = ("chongqingbei", "guiyangbei"),
         search_name_pair: tuple = ("Chong Qing Bei", "Gui Yang Bei"),
-        miss_station_id: str = "guiyangbei",
-        miss_station_name: str = "Gui Yang Bei",
+        miss_station_name: str = "guiyangbei",
 ):
     query = AdminQuery(Constant.ts_address)
     query.login("admin", "222222")
 
     # 添加缺失的站点
-    query.stations_post(
-        miss_station_id,
+    miss_station_id = query.stations_post(
         miss_station_name,
         5
-    )
-    origin_route_id = search_route2staion(query, list(search_id_pair))
+    )["id"]
 
     # 添加路线,获取route_id
+    origin_route_id = search_route2staion(query, list(search_id_pair))
     route_id = query.admin_add_route(
         search_id_pair[0]+","+search_id_pair[1],
         "0,500",
@@ -340,21 +358,28 @@ def admin_add_route_search(
     if origin_route_id != "":
         query.admin_delete_route(route_id)
         route_id = origin_route_id
+    print("添加路线成功")
+
     # 添加车次
-    train_type = random.choice(AdminData.train_types)
-    travel_data = query.admin_add_travel(
-        AdminData.random_train_type_reflection[train_type],
+    train_type = random.choice(AdminData.train_types)  # 获取一种车的类型
+    # travel ID需要是对于此次场景的运行是唯一的，利用uuid来生成
+    travel_id_number = uuid.uuid1().hex  # 转换成str
+    travel_id = train_type[0] + travel_id_number
+    print("  travel-id :   " + travel_id)
+    query.admin_add_travel(   # add a new travel是没有返回值的，每个travel用travel ID来标识
+        travel_id,   # 根据车的类型获取车次对应Travel ID
         train_type,
         route_id
-        # AdminData.travel_start_time
+        # AdminData.travel_start_time    # 默认新增travel的开始时间为当下
     )
+    print("添加车次成功" + str(travel_id))
 
-    if train_type == "D" or train_type == "G":
+    if train_type[0] == "D" or train_type[0] == "G":
         query_type = "high_speed"
     else:
         query_type = "normal"
-    trip_info = query_left_tickets_successfully(query, query_type, search_name_pair)
-    return trip_info
+    trip_info = query_left_tickets_successfully(query, query_type, search_name_pair)  # 大写的
+    return trip_info, miss_station_id, route_id, travel_id
 
 
 # 改签
@@ -363,16 +388,19 @@ def admin_add_route_search(
 def rebook(query: Query, order_info: dict) -> str:
     order_id = order_info.get("id")  # 获取id
 
-    # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签)
+    # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签，否则涉及补差价的问题)
     train_type = order_info.get("trainNumber")[0]
     if train_type == 'G' or train_type == 'D':
         query_type = "high_speed"
     else:
         query_type = "normal"
     place_pair = (order_info.get("from"), order_info.get("to"))
-    new_date = datestr  # 获取当天
+    new_date = order_info.get("travelDate")   # 默认改签同一天
     new_trip_info = query_left_tickets_successfully(query, query_type, place_pair, new_date)
     print(f"[rebook new trip info] : {new_trip_info}")
+
+    # 需要更细致的区分时间问题
+    # 获取发送请求的时间
 
     # 改签(默认改签当天)
     new_trip_id = new_trip_info.get("tripId").get("type")+new_trip_info.get("tripId").get("number")  # 返回值是dict
@@ -383,7 +411,46 @@ def rebook(query: Query, order_info: dict) -> str:
     if res.find("you order not suitable to rebook!") != -1:
         logger.warning("[rebook unsuccessfully]: not paid or rebook twice")
     if res.find("You can only change the ticket before the train start or within 2 hours after the train start.") != -1:
-        logger.warning("[rebook unsuccessfully]: time invalid (within two hours)")
+        logger.warning("[rebook unsuccessfully]: time invalid " +
+                       "(You can only change the ticket before the train start " +
+                       "or within 2 hours after the train start.)")
+    if res.find("Success!") != -1:  # 改签成功
+        # 如果改签成功则可能会产生新的orderId，则返回新的orderId
+        res_dict = eval(res)  # 改签成功的data不为null，可以转换为字典处理
+        order_id = res_dict.get("data").get("id")
+        logger.warning(f"[rebook successfully]: Success!  orderId : {order_id}")
+    return order_id
+
+
+# rebook成功的场景（已支付, 第一次rebook, 当前时间在发车时间之前或发车时间2h后）
+def rebook_successfully(query: Query, order_info: dict) -> str:
+    order_id = order_info.get("id")  # 获取id
+
+    # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签，否则涉及补差价的问题)
+    train_type = order_info.get("trainNumber")[0]
+    if train_type == 'G' or train_type == 'D':
+        query_type = "high_speed"
+    else:
+        query_type = "normal"
+    place_pair = (order_info.get("from"), order_info.get("to"))
+    new_date = datestr  # 获取当天
+    new_trip_info = query_left_tickets_successfully(query, query_type, place_pair, new_date)
+    print(f"[rebook new trip info] : {new_trip_info}")
+
+    # 需要更细致的区分时间问题
+
+    # 改签(默认改签当天)
+    new_trip_id = new_trip_info.get("tripId").get("type")+new_trip_info.get("tripId").get("number")  # 返回值是dict
+    res = query.rebook_ticket(order_info.get("id"), order_info.get("trainNumber"),
+                              new_trip_id, new_date, order_info.get("coachNumber"))
+
+    # 根据res区分不同情形
+    if res.find("you order not suitable to rebook!") != -1:
+        logger.warning("[rebook unsuccessfully]: not paid or rebook twice")
+    if res.find("You can only change the ticket before the train start or within 2 hours after the train start.") != -1:
+        logger.warning("[rebook unsuccessfully]: time invalid " +
+                       "(You can only change the ticket before the train start " +
+                       "or within 2 hours after the train start.)")
     if res.find("Success!") != -1:  # 改签成功
         # 如果改签成功则可能会产生新的orderId，则返回新的orderId
         res_dict = eval(res)  # 改签成功的data不为null，可以转换为字典处理
@@ -395,13 +462,52 @@ def rebook(query: Query, order_info: dict) -> str:
 # 改签失败(原因：改签两次)
 # 在预定成功并刷新订单来获取所有符合条件的订单的场景之后，搜索得到刚刚预定的订单并且改签(再次query)
 # 输入为refresh查找得到的所有order信息(orderId，tripId)
-def rebook_unsuccessfully_for_rebook_twice(query: Query, order_info: dict):
+def rebook_unsuccessfully_for_rebooking_twice(query: Query, order_info: dict):
     # 调用paid and rebook successfully函数后再次rebook
     pay_and_rebook_successfully(query, order_info)
 
     # 再次查找余票(此处只有normal和high_speed可选，默认选择同类型的列车进行改签)
     order_id = rebook(query, order_info)
     logger.warning("[rebook unsuccessfully for rebook twice]")
+    return order_id
+
+
+# 支付并且改签更贵的车次成功
+def pay_and_rebook_successfully_for_more_expensive_travel(query: Query, order_info: dict):
+    # 支付
+    query.pay_order(order_info.get("id"), order_info.get("trainNumber"))
+
+    # 改签步骤：
+    # 查余票 -> 选择一个trip -> rebook并将差价作为返回值并在前端展示 -> 提交并支付差价 -> 改签成功
+    order_id = order_info.get("id")  # 获取id
+    # 查找余票并随机选择一个trip(此处只有normal和high_speed可选，默认选择同类型的列车进行改签，差价利用seat_type来区分)
+    train_type = order_info.get("trainNumber")[0]
+    if train_type == 'G' or train_type == 'D':
+        query_type = "high_speed"
+    else:
+        query_type = "normal"
+    place_pair = (order_info.get("from"), order_info.get("to"))
+    new_date = order_info.get("travelDate")   # 默认改签同一天
+    new_trip_info = query_left_tickets_successfully(query, query_type, place_pair, new_date)
+    print(f"[rebook new trip info] : {new_trip_info}")
+
+    # 改签(默认改签同一天，并且调整座位类型来制造差价，在完整的场景中调用此方法座位类型的一定是3)
+    new_trip_id = new_trip_info.get("tripId").get("type")+new_trip_info.get("tripId").get("number")  # 返回值是dict
+    res = query.rebook_ticket(order_info.get("id"), order_info.get("trainNumber"),
+                              new_trip_id, new_date, "2")
+    print(res)    # 此处的res的内容为需要补的差价金额，并在前端提示
+
+    # 补差价后改签成功
+    print("补差价后改签成功")
+    res_difference = query.calculate_difference_and_submit(order_info.get("id"), order_info.get("trainNumber"),
+                                                           new_trip_id, new_date, "2")
+    # 返回改签后订单的order Id
+    if res.find("Success!") != -1:  # 改签成功
+        # 如果改签成功则可能会产生新的orderId，则返回新的orderId
+        res_dict = eval(res)  # 改签成功的data不为null，可以转换为字典处理
+        order_id = res_dict.get("data").get("id")
+        logger.warning(f"[rebook more expensive travel successfully]: Success!  orderId : {order_id}")
+
     return order_id
 
 
@@ -422,10 +528,20 @@ def collect_and_enter(query: Query, order_id):
     logger.info("collect and enter station")
 
 
+# 取消订单
+def refund_and_cancel(query: Query, order_id):
+    query.cancel_refund_calculate(order_id=order_id)
+    query.cancel_order(order_id)
+
+
 # 查询order的consign并进行新增
 def extra_consign(query: Query, order_info: dict):
     # 查询当前order的consign
-    query.query_consign_by_order_id(order_info.get("id"))
+    consign_data = query.query_consign_by_order_id(order_info.get("id"))   # 如果已经有consign信息了则返回信息不然为None
+    if consign_data is None:  # 表示没有在preserve中指定consign
+        consign_id = ""
+    else:
+        consign_id = consign_data["id"]
     # 新建consign
     consign_data = {
         "accountId": query.uid,
@@ -433,7 +549,30 @@ def extra_consign(query: Query, order_info: dict):
         "from": order_info.get("from"),
         "to": order_info.get("to"),
         "orderId": order_info.get("id"),
+        "consignee": "consign_test_again",
+        "phone": "19921940999",
+        "weight": random.randint(1, 10),
+        "handleDate": datestr,   # 2022-10-10
+        "isWithin": False,
+        "id": consign_id   # consign id
     }
     query.put_consign(consign_data)
     # 再次查询
     query.query_consign_by_order_id(order_info.get("id"))
+
+
+# 删除多余的没有删掉的user()
+def delete_extra_users():
+    admin_query = AdminQuery(ts_address=Constant.ts_address)
+    admin_query.login("admin","222222")
+
+    # 获取所有的users
+    all_users = admin_query.admin_get_all_users()
+    print(all_users)
+
+    # 保留初始用户 fd
+    for user in all_users:
+        if user["userName"] != "fdse_microservice":
+            # 删掉剩余的user
+            admin_query.admin_delete_user(user["userId"])
+            print(user["userId"] + " 删除成功")
