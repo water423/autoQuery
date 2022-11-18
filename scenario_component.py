@@ -62,19 +62,36 @@ def data_init():
         )
 
 
-# 对于data_init清空数据
-def data_init_delete():
-    print('xxxx')
-
-
 def admin_operations():
-    # 1. 添加新的站点、路线、车次
-    # 2. 添加新的用户
-    # 初始化管理员
     admin_query = AdminQuery(Constant.ts_address)
     admin_query.login(Constant.admin_username, Constant.admin_pwd)
+
+    # 1. 添加新的站点、路线、车次、price、config
+    # 2. 添加新的用户
+
+    # 对于station，每次执行添加的station都是唯一的
+    this_stations_data = []
+    this_stations = []
+    this_stations_str = ""
+    for station in AdminData.admin_stations_data:  # station是一个tuple
+        this_station_name = station[0] + "_" + uuid.uuid1().hex
+        this_station = (this_station_name, station[1], station[2])
+        this_stations_data.append(this_station)
+        this_stations.append(this_station_name)
+        this_stations_str += this_station_name + ","
+    this_stations_str = this_stations_str[:len(this_stations_str)-1]
+    this_route_data = [(this_stations_str, AdminData.distance_list, this_stations[0], this_stations[len(this_stations)-1])]
+    # 同理，对于travel也是唯一的
+    this_train_trips_id = []
+    this_train_update_trip_id = []   # 这两者应该是一样的，update指update操作的目标travel
+    for trip_id in AdminData.admin_train_trips_id:
+        this_trip_id = trip_id + uuid.uuid1().hex
+        this_train_trips_id.append(this_trip_id)
+        this_train_update_trip_id.append(this_trip_id)
+        print(this_trip_id)
+
     # 初始化站点信息
-    for station_data in AdminData.admin_stations_data:
+    for station_data in this_stations_data:
         admin_query.stations_post(
             station_data[0],
             # station_data[1],
@@ -82,7 +99,7 @@ def admin_operations():
         )
     # 初始化路线信息
     route_id_list = []
-    for route_data in AdminData.admin_route_data:
+    for route_data in this_route_data:
         route_id = admin_query.admin_add_route(
             route_data[0],
             route_data[1],
@@ -93,11 +110,24 @@ def admin_operations():
         # 增加车次
         for i in range(len(AdminData.train_types)):
             admin_query.admin_add_travel(
-                AdminData.admin_train_trips_id[i],
+                this_train_trips_id[i],
                 AdminData.train_types[i],
                 route_id
                 # AdminData.travel_start_time
             )
+    print(str(route_id_list))
+
+    # 添加price，对于上述route
+    price_id_list = []
+    for route_id in route_id_list:
+        for i in range(len(AdminData.train_types)):
+            price_id = admin_query.prices_post(route_id, AdminData.train_types[i], 0.5, 1)["id"]
+            price_id_list.append(price_id)
+    print(price_id_list)
+
+    # 添加config
+    config_name = "config_name_" + uuid.uuid1().hex    # config是用name来标识的
+    admin_query.configs_post(config_name, "1", "description")
 
     # 初始化用户
     user_data = admin_query.admin_add_user(
@@ -109,7 +139,6 @@ def admin_operations():
         uuid.uuid1().hex,
         AdminData.admin_data_user["gender"]
     )
-    print(user_data)
     user_id = user_data["userId"]
     # 初始化用户联系人 没有联系人id无法删除 因此暂不添加
     for contact in AdminData.admin_data_user_contacts:
@@ -121,21 +150,11 @@ def admin_operations():
             contact["phone_number"]
         )
 
-    # 进行Get查询信息
-    print("执行Get操作")
-    admin_query.admin_get_all_routes()
-    admin_query.configs_get()
-    admin_query.trains_get()
-    all_stations = admin_query.stations_get()  # station post是没有返回值的不返回id，所以需要获取所有然后筛选
-    admin_query.contacts_get()
-    admin_query.orders_get()
-    admin_query.prices_get()
-    admin_query.admin_get_all_travels()
-    admin_query.admin_get_all_users()
 
     print("执行update操作")
     # 执行更新操作
-    for station_data in AdminData.admin_stations_data:
+    all_stations = admin_query.stations_get()
+    for station_data in this_stations_data:
         # 利用name进行查找对应的id(在系统中，重复添加name会报错)
         for s in all_stations:
             s_name = s["name"]
@@ -145,19 +164,25 @@ def admin_operations():
                     station_data[0],
                     station_data[2]
                 )
-        print(str(station_data[0]) + "update成功")
     # 更新路线信息
     for route_id in route_id_list:
         # 更新车次
         for i in range(len(AdminData.train_types)):
             admin_query.admin_update_travel(
-                AdminData.admin_train_update_trip_id[i],
+                this_train_update_trip_id[i],
                 AdminData.train_types[i],
                 route_id,
                 AdminData.travel_update_start_time
             )
+    # 更新price，对于上述route
+    for price_id in price_id_list:
+        for i in range(len(AdminData.train_types)):
+            admin_query.prices_put(price_id, AdminData.train_types[i], route_id_list[i], 0.6, 1)
 
-    # 更新用户(报错)
+    # 更新config
+    admin_query.configs_put(config_name, "1", "description_update")
+
+    # 更新用户
     admin_query.admin_update_user(
         user_data["userId"],
         AdminData.admin_data_user["document_type"],
@@ -180,7 +205,7 @@ def admin_operations():
         )
 
     # 进行Get查询信息
-    print("更新之后再次进行Get查询")
+    print("更新之后进行Get查询")
     admin_query.admin_get_all_routes()
     admin_query.configs_get()
     admin_query.trains_get()
@@ -194,24 +219,29 @@ def admin_operations():
     print("执行DELETE操作")
     # 删除添加的信息
     # 删除站点，同样需要寻找
-    for station_data in AdminData.admin_stations_data:
+    for station_data in this_stations_data:
         # 利用name进行查找对应的id(在系统中，重复添加name会报错)
         for s in all_stations:
             s_name = s["name"]
             if s_name == station_data[0]:  # [0]为name [2]为stay time
                 admin_query.stations_delete(s["id"])
-        print(str(station_data[0]) + "删除成功")
 
     # 删除车次和路线
     for route_id in route_id_list:
-        # 增加车次
         for i in range(len(AdminData.train_types)):
             admin_query.admin_delete_travel(
-                AdminData.admin_train_trips_id[i]
+                this_train_trips_id[i]
             )
         admin_query.admin_delete_route(
             route_id
         )
+
+    # 删除price
+    for price_id in price_id_list:
+        admin_query.prices_delete(price_id)
+
+    # 删除config
+    admin_query.configs_delete(config_name)
 
     # 删除contact
     for contact in contacts:
@@ -221,18 +251,6 @@ def admin_operations():
     admin_query.admin_delete_user(
         user_id
     )
-
-    # 进行Get查询信息
-    print("删除之后进行GET查询")
-    admin_query.admin_get_all_routes()
-    admin_query.configs_get()
-    admin_query.trains_get()
-    admin_query.stations_get()
-    admin_query.contacts_get()
-    admin_query.orders_get()
-    admin_query.prices_get()
-    admin_query.admin_get_all_travels()
-    admin_query.admin_get_all_users()
 
 
 # 新增用户并登陆
@@ -341,6 +359,10 @@ def admin_add_route_search(
     query = AdminQuery(Constant.ts_address)
     query.login("admin", "222222")
 
+    # 确保对于每一次查询均是唯一的，若系统中已经存在了此station则在删除之前再次添加均会返回id=None
+    if miss_station_name == "guiyangbei":
+        miss_station_name = miss_station_name + uuid.uuid1().hex
+
     # 添加缺失的站点
     miss_station_id = query.stations_post(
         miss_station_name,
@@ -365,7 +387,6 @@ def admin_add_route_search(
     # travel ID需要是对于此次场景的运行是唯一的，利用uuid来生成
     travel_id_number = uuid.uuid1().hex  # 转换成str
     travel_id = train_type[0] + travel_id_number
-    print("  travel-id :   " + travel_id)
     query.admin_add_travel(   # add a new travel是没有返回值的，每个travel用travel ID来标识
         travel_id,   # 根据车的类型获取车次对应Travel ID
         train_type,
@@ -558,7 +579,8 @@ def extra_consign(query: Query, order_info: dict):
     }
     query.put_consign(consign_data)
     # 再次查询
-    query.query_consign_by_order_id(order_info.get("id"))
+    query.query_consign_by_order_id(order_info.get("id"))   # 根据order查询
+    query.query_consign_by_consignee(consign_data["consignee"])   # 根据consignee查询
 
 
 # 删除多余的没有删掉的user()
