@@ -2,13 +2,14 @@
 
 class Constant:
     # ts_address = 'http://139.196.228.58:32677'   # 阿里云
-    # ts_address = "http://10.176.122.155:32677"  # 学院云
-    ts_address = 'http://10.176.122.1:32677'  # HD学院云
+    ts_address = "http://10.176.122.154:32677"  # 学院云
+    #ts_address = 'http://10.176.122.1:32677'  # HD学院云
 
     admin_username = "admin"
     admin_pwd = "222222"
     user_username = "fdse_microservice"
     user_pwd = "111111"
+
 
 class InitData:
 
@@ -27,7 +28,7 @@ class InitData:
         (station_list, distance_list, "fengtai", "chengdudong")
     ]
     train_types = [
-        "GaoTieOne","GaoTieTwo","DongCheOne","ZhiDa","TeKuai","KuaiSu"
+        "GaoTieOne", "GaoTieTwo", "DongCheOne", "ZhiDa", "TeKuai", "KuaiSu"
     ]
     init_train_trips_id = [
         "G9001", "G9002", "D8003", "Z8004", "T8005", "K8006"
@@ -69,8 +70,6 @@ class InitData:
     init_routes_ids = []
 
 
-
-
 class AdminData:
     admin_stations_data = [
         ("taiyuannan", "Tai Yuan Nan", 3),
@@ -79,23 +78,26 @@ class AdminData:
         # ("changshanan", "Chang Sha Nan", 3),
         # ("guangzhounan", "Guang Zhou Nan", 5),
         # ("shenzhenbei", "Shen Zhen Bei", 5),
-        ("futian", "Fu Tian", 3),
+        # ("futian", "Fu Tian", 3),
         ("jiulong", "Jiu Long", 5)
     ]
     # station_list = "taiyuannan,zhengzhoudong,hankou,changshanan,guangzhounan,shenzhenbei,futian,jiulong"
-    station_list = "taiyuannan,futian,jiulong"
-    distance_list = "0,300,1660"
+    station_list = "taiyuannan,jiulong"
+    distance_list = "0,1660"
     admin_route_data = [
-        (station_list, distance_list, "taiyuannan", "jiulong")
+        (station_list, distance_list, station_list[0], station_list[1])
     ]
     train_types = [
-        "GaoTieOne","DongCheOne","ZhiDa"
+        # "GaoTieOne","DongCheOne","ZhiDa"
+        "GaoTieOne"
     ]
     admin_train_trips_id = [
-        "G7001", "D7003", "Z7004"
+        # "G7001", "D7003", "Z7004"
+        "G7001"
     ]
     admin_train_update_trip_id = [
-        "G7001", "D7003", "Z7004"
+        # "G7001", "D7003", "Z7004"
+        "G7001"
     ]
     travel_start_time = "1367989200000"
     travel_update_start_time = "1367989800000"
@@ -115,19 +117,19 @@ class AdminData:
             "document_type": 1,
             "document_number": "7135488099312X",
             "phone_number": "19921940978",
-        },
-        {
-            "contact_name": "adminContactTest2",
-            "document_type": 1,
-            "document_number": "7235488099312X",
-            "phone_number": "18921940979",
-        },
-        {
-            "contact_name": "adminContactTest3",
-            "document_type": 1,
-            "document_number": "7335488099312X",
-            "phone_number": "179219409780",
         }
+        # {
+        #     "contact_name": "adminContactTest2",
+        #     "document_type": 1,
+        #     "document_number": "7235488099312X",
+        #     "phone_number": "18921940979",
+        # },
+        # {
+        #     "contact_name": "adminContactTest3",
+        #     "document_type": 1,
+        #     "document_number": "7335488099312X",
+        #     "phone_number": "179219409780",
+        # }
     ]
 
     random_train_type_reflection = {

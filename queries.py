@@ -2,6 +2,8 @@ import requests
 import logging
 import time
 from utils import *
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 logger = logging.getLogger("auto-queries")
 datestr = time.strftime("%Y-%m-%d", time.localtime())
@@ -15,6 +17,23 @@ place_pairs_origin = [("Shang Hai", "Su Zhou"),  # place_pairs （起始地，�
                ]
 
 
+def retry_session(retries, session=None, backoff_factor=0.3):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        connect=retries,
+        read=retries,
+        method_whitelist=False,
+        # allowed_methods=False,
+        status_forcelist=[500, 502, 503, 504],
+        backoff_factor=backoff_factor,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+
+
 class Query:
     """
     train-ticket query class
@@ -24,7 +43,8 @@ class Query:
         self.address = ts_address
         self.uid = ""
         self.token = ""
-        self.session = requests.Session()
+        # self.session = requests.Session()
+        self.session = retry_session(retries=5)
         self.session.headers.update({
             'Proxy-Connection': 'keep-alive',
             'Accept': 'application/json',
@@ -112,7 +132,7 @@ class Query:
 
         if response.status_code != 200 or response.json().get("data") is None:   # 响应错误则忽略并打印日志
             logger.warning(
-                f"request for {url} failed. response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")                           # 响应正常则获取内容（字典集）
@@ -151,7 +171,7 @@ class Query:
         print(response.json())
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误
             logger.warning(
-                f"request for {url} failed. response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")                     # 响应正确
@@ -196,7 +216,7 @@ class Query:
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误
             logger.warning(
-                f"request for {url} failed. response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")                          # 响应正确
@@ -241,7 +261,7 @@ class Query:
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误
             logger.warning(
-                f"request for {url} failed. response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return []
 
         data = response.json().get("data")                                      # 响应正确
@@ -264,7 +284,7 @@ class Query:
         response = self.session.get(url=url, headers=headers)
         if response.status_code != 200 or response.json().get("data") is None:
             logger.warning(
-                f"query assurance failed, response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         assurance_data = response.json().get("data")
         # assurance只有一种
@@ -286,12 +306,12 @@ class Query:
         response = self.session.get(url=url, headers=headers)
         if response.status_code != 200:  # or response.json().get("data") is None
             logger.warning(
-                f"query food failed, response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         else:
             if response.json().get("data") is None:
                 logger.info(
-                    f"query food successfully, but no food available.")
+                    f"Request for {url} successfully, but no food available.")
                 print("[query food successfully][no food queried]")
                 return None
         res_food_data = response.json().get("data")
@@ -300,7 +320,7 @@ class Query:
         return res_food_data
 
     # 查询联系人
-    def query_contacts(self, user_id: str = "",headers: dict = {}) -> List:
+    def query_contacts(self, user_id: str = "", headers: dict = {}) -> List:
         """
         返回联系人信息列表
         :param headers:
@@ -317,7 +337,7 @@ class Query:
         response = self.session.get(url=url, headers=headers)
         if response.status_code != 200 or response.json().get("data") is None:
             logger.warning(
-                f"query contacts failed, response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")
@@ -351,7 +371,8 @@ class Query:
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 201 or response.json().get("data") is None:  # 注意此请求的返回为201 OK
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")
@@ -383,7 +404,7 @@ class Query:
         response = self.session.post(url=url, headers=headers, json=payload)
         if response.status_code != 200 or response.json().get("data") is None:
             logger.warning(
-                f"query orders failed, response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")
@@ -396,9 +417,6 @@ class Query:
                 order_id = d.get("id")
                 trip_id = d.get("trainNumber")
                 pairs.append((order_id, trip_id))
-
-        logger.info(f"queried {len(pairs)} orders")
-
         return pairs
 
     # 获取当前用户的普通票订单（true）
@@ -427,7 +445,7 @@ class Query:
         response = self.session.post(url=url, headers=headers, json=payload)
         if response.status_code != 200 or response.json().get("data") is None:
             logger.warning(
-                f"query orders failed, response data is {response.text}")
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")
@@ -477,7 +495,7 @@ class Query:
             logger.info(f"order {order_id} put consign success")
         else:
             logger.warning(
-                f"order {order_id} failed, code: {res.status_code}, text: {res.text}")
+                f"order {order_id} put consign failed, code: {res.status_code}, text: {res.text}")
             return None
 
         return order_id
@@ -533,8 +551,12 @@ class Query:
         if res_refound.status_code == 200 and res_refound.json()["status"] == 1:
             logger.info("success to query refund data")
         else:
-            logger.warning(
-                f"[{res_refound.json()['msg']}]")
+            if res_refound.status_code == 200:
+                logger.warning(f"[{res_refound.json()['msg']}]")
+            else:
+                logger.warning(
+                    f"Request for {refound_url} failed. Response code is {res_refound.status_code}. "
+                    f"Response data is {res_refound.json()['msg']}")
             return
         res_data = res_refound.json()["data"]
         refound = str_to_float(res_data)
@@ -627,7 +649,7 @@ class Query:
             logger.info(r.text)
         else:
             logger.warning(
-                f"Request Failed: status code: {r.status_code}, {r.text}")
+                f"Request for {url} failed: status code: {r.status_code}, {r.text}")
 
         return r.text
 
@@ -654,7 +676,7 @@ class Query:
             logger.info(r.text)
         else:
             logger.warning(
-                f"Request Failed: status code: {r.status_code}, {r.text}")
+                f"Request for {url} failed: status code: {r.status_code}, {r.text}")
 
         return r.text
 
@@ -779,6 +801,7 @@ class Query:
 
         if res.status_code == 200 and res.json()["data"] == "Success":
             logger.info(f"preserve trip {trip_id} success")
+            print("[preserve successfully][trip id is " + trip_id + " ]")
         else:
             logger.error(
                 f"preserve failed, code: {res.status_code}, {res.text}")
@@ -798,30 +821,27 @@ class Query:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/account/{account_id}"
         r = self.session.get(url=url, headers=headers)
-        print(r.json())
         if r.status_code == 200 and r.json()["status"] == 1:
             logger.info("success to query consign")
             res_data = r.json()["data"]
             return res_data
         else:
             logger.warning(
-                f"faild to query consign with status_code: {r.json()['msg']}")
+                f"[query consign by account id failed] status_code: {r.status_code}. msg: {r.json()['msg']}")
 
     def query_consign_by_order_id(self, order_id, headers: dict = {}):
         if headers == {}:
             headers = self.session.headers
         url = f"{self.address}/api/v1/consignservice/consigns/order/{order_id}"
         r = self.session.get(url=url, headers=headers)
-        print(r.json())
         if r.status_code == 200 and r.json()["status"] == 1:   # 如果为空返回0
             logger.info("success to query consign")
             res_data = r.json()["data"]
             return res_data
         else:
             logger.warning(
-                f"faild to query consign with status_code: {r.json()['msg']}")
+                f"[query consign by order id failed] status_code: {r.status_code}. msg: {r.json()['msg']}")
             return None
-
 
     def query_consign_by_consignee(self, consignee, headers: dict = {}):
         if headers == {}:
@@ -834,7 +854,7 @@ class Query:
             return res_data
         else:
             logger.warning(
-                f"faild to query consign with status_code: {r.status_code}")
+                f"[query consign by consignee failed] status_code: {r.status_code}. msg: {r.json()['msg']}")
 
 
 

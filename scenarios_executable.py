@@ -3,6 +3,8 @@ from constant import *
 from datetime import timedelta, datetime
 import time
 
+logger = logging.getLogger("auto-queries")
+
 
 # 正常preserve流程
 # login -> 查询余票成功 -> 正常预定&refresh
@@ -28,11 +30,13 @@ def preserve_successfully(query: Query = None,
         place_pair = (start, end)
         place_pairs.append(place_pair)
     query_place_pair = random_from_list(place_pairs)
-    print(f"[start station & end station] : {query_place_pair} ")
+    logger.info(f"[start station & end station] : {query_place_pair} ")
+    # print(f"[start station & end station] : {query_place_pair} ")
     # 选择查询的方式
     query_types = ["normal", "high_speed", "min_station", "cheapest", "quickest"]
     query_type = random_from_list(query_types)
-    print("[query_type] : " + query_type)
+    logger.info("[query_type] : " + query_type)
+    # print("[query_type] : " + query_type)
 
     # 查询余票
     # date = time.strftime("%Y-%m-%d", time.localtime())   # 默认为选择当日日期，因为query函数无法找到过去日期的票
@@ -45,40 +49,49 @@ def preserve_successfully(query: Query = None,
 
 
 # 正常查票订票检票进站
-def normal_routine():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
+def normal_routine(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
+
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
     all_orders_info = preserve_successfully(query)
 
     # 异常判断，如果order_info是null，即preserve错误为null
     if all_orders_info is None:
-        print("no order available ! exit")
+        # print("no order available ! exit")
+        logger.info("[normal_routine] no order available ! exit")
         return
 
     # 选择一个订单作为此次处理的对象，输入的order的状态已经是符合条件的了 preserve_and_refresh的参数types来确定
     order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
-    print('[order selected] '+str(order_info))
+    logger.info(f"[order selected] : {order_info} ")
+    # print('[order selected] '+str(order_info))
     # 支付
     query.pay_order(order_info.get("id"), order_info.get("trainNumber"))
     # 取票进站
     collect_and_enter(query, order_info.get("id"))
+    logger.info(f"[pay, collect and enter successfully] : {order_info} ")
 
     admin = AdminQuery(Constant.ts_address)
     admin.login(Constant.admin_username, Constant.admin_pwd)
     # admin删除订单
     admin.orders_delete(order_info.get("id"), order_info.get("trainNumber"))
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)
 
 
 # rebook失败后成功(一套完整的流程)
 # login -> preserve_successfully -> rebook失败(not paid) -> pay and rebook成功 -> 取票进站台
-def rebook_routine():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
-    # query = Query(Constant.ts_address)
-    # query.login("b7551865fce611ec868ab0359fb6e508", "111111")
+def rebook_routine(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
 
     # 成功预定(query查票 -> preserve -> refresh)
     # 注意：此处为了后续rebook一定可以找到车次成功，默认定明天的车
@@ -103,14 +116,18 @@ def rebook_routine():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     # admin删除订单
     admin.orders_delete(order_id, order_info.get("trainNumber"))
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)
 
 
 # 正常订票并且取消
-def cancel_routine():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
+def cancel_routine(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
 
     # 订票
     tomorrow_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -136,16 +153,20 @@ def cancel_routine():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     # admin删除订单
     admin.orders_delete(order_id, order_info.get("trainNumber"))
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)
 
 
 # rebook两次后取消
 # 同样前提也是改签成功
 # login -> preserve_successfully -> rebook两次失败 -> cancel
-def rebook_twice_and_cancel():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
+def rebook_twice_and_cancel(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
 
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
     tomorrow_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -169,58 +190,62 @@ def rebook_twice_and_cancel():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     # admin删除订单
     admin.orders_delete(order_id, order_info.get("trainNumber"))
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)
 
 
 # 由于时间问题rebook失败：在发车时间后2h外改签
 # today去改签预定的昨天/前天的车次(不可行，因为查询余票的时候输入过去的时间节点会没有返回值并导致preserve失败)
 # 添加一班此刻的前2h的车次，搜索预定并且preserve，后失败  --> 每天的0-3点用不了因为preserve时会查票失败
-def rebook_exceeding_time_and_cancel():
-    # 在init route的基础上加上time形成travel
-    admin_query = AdminQuery(Constant.ts_address)
-    admin_query.login("admin", "222222")
-    # 获取所有route
-    all_routes_info = admin_query.admin_get_all_routes()
-    print(all_routes_info)
-    # 获取init中的route:
-    init_route = InitData.station_list.split(",")
-    init_route_id = ""
-    for route in all_routes_info:
-        if route["stations"] == init_route:
-            init_route_id = route["id"]
-            break   # route可以重复添加stations，会产生不同的id
-    # 添加travel:指定trip_id和train_type_id，输入route_id和时间
-    train_type_id = random_from_list(InitData.train_types)
-    trip_id = train_type_id[0] + "2022"  # 获取第一个char
-    start_time = (datetime.now() - timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
-    print(trip_id)
-    print(start_time)
-    admin_query.admin_add_travel(trip_id, train_type_id, init_route_id, start_time)
-
-    query = new_user()
-    # 车票预定(query查票 -> preserve -> refresh),预定刚刚的车次
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    all_orders_info = preserve_successfully(query, today_date)  # 返回所有的order
-    # 选择一个订单作为此次处理的对象，需要筛选时间为tomorrow_date的
-    order_info = {}
-    for order in all_orders_info:
-        if order["trainNumber"] == trip_id:
-            order_info = order
-    print("被选择的order为：" + str(order_info))  # 后续的rebook依赖此处的选择的order
-
-    # 支付并改签
-    pay_and_rebook_successfully()
-    # 恢复数据库
-    # 删除travel
-    admin_query.admin_delete_travel(trip_id)
+# def rebook_exceeding_time_and_cancel():
+#     # 在init route的基础上加上time形成travel
+#     admin_query = AdminQuery(Constant.ts_address)
+#     admin_query.login("admin", "222222")
+#     # 获取所有route
+#     all_routes_info = admin_query.admin_get_all_routes()
+#     print(all_routes_info)
+#     # 获取init中的route:
+#     init_route = InitData.station_list.split(",")
+#     init_route_id = ""
+#     for route in all_routes_info:
+#         if route["stations"] == init_route:
+#             init_route_id = route["id"]
+#             break   # route可以重复添加stations，会产生不同的id
+#     # 添加travel:指定trip_id和train_type_id，输入route_id和时间
+#     train_type_id = random_from_list(InitData.train_types)
+#     trip_id = train_type_id[0] + "2022"  # 获取第一个char
+#     start_time = (datetime.now() - timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S")
+#     print(trip_id)
+#     print(start_time)
+#     admin_query.admin_add_travel(trip_id, train_type_id, init_route_id, start_time)
+#
+#     query = new_user()
+#     # 车票预定(query查票 -> preserve -> refresh),预定刚刚的车次
+#     today_date = datetime.now().strftime("%Y-%m-%d")
+#     all_orders_info = preserve_successfully(query, today_date)  # 返回所有的order
+#     # 选择一个订单作为此次处理的对象，需要筛选时间为tomorrow_date的
+#     order_info = {}
+#     for order in all_orders_info:
+#         if order["trainNumber"] == trip_id:
+#             order_info = order
+#     print("被选择的order为：" + str(order_info))  # 后续的rebook依赖此处的选择的order
+#
+#     # 支付并改签
+#     # pay_and_rebook_successfully()
+#     # 恢复数据库
+#     # 删除travel
+#     admin_query.admin_delete_travel(trip_id)
 
 
 # rebook成功(更贵的车次 需要计算并支付差价differnece)
 # 对于同一个route 价钱与起始站终点站之间的距离以及一等座二等座相关
-def rebook_more_expensive_travel_successfully():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
+def rebook_more_expensive_travel_successfully(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
 
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
     tomorrow_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -243,16 +268,21 @@ def rebook_more_expensive_travel_successfully():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     # admin删除订单
     admin.orders_delete(order_id, order_info.get("trainNumber"))
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)
 
 
 # 异常preserve流程(no route)，预定车票查询失败，admin添加并重新预定
 # login -> search failed -> admin add -> preserve_successfully -> collect & enter
 # login -> 查询余票(no route) -> admin添加相关信息 -> 查询余票成功 -> 正常预定&refresh -> 删除相关数据
-def search_failed_and_preserve():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
+def search_failed_and_preserve(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
+
     # 初始查询失败
     query_left_tickets_unsuccessfully(query)   # 默认查询的对就是 guiyangbei chongqingbei
     # admin添加相关站点并进行重新进行search
@@ -280,14 +310,19 @@ def search_failed_and_preserve():
     admin.admin_delete_route(route_id)
     # admin删除travel
     admin.admin_delete_travel(travel_id)
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)
 
 
 # consign加入preserve过程
-def consign_and_preserve():
-    # 新建用户并登陆or使用特定用户登陆
-    query = new_user()
+def consign_and_preserve(query: Query = None):
+
+    init_query = query
+    if query is None:  # 如果没有外部输入用户
+        # 新建用户并登陆or使用特定用户登陆
+        query = new_user()
+
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
     all_orders_info = preserve_successfully(query)
     # 选择一个订单作为此次处理的对象，输入的order的状态已经是符合条件的了 preserve_and_refresh的参数types来确定
@@ -295,6 +330,10 @@ def consign_and_preserve():
     print(order_info)
     # consign
     extra_consign(query, order_info)
+
+    # 可以consign完成之后在用户主页查找当前用户的所有consign
+    query.query_consign_by_account_id(query.uid)
+
     # 支付
     query.pay_order(order_info.get("id"), order_info.get("trainNumber"))
     # 取票进站
@@ -305,5 +344,6 @@ def consign_and_preserve():
     admin.login(Constant.admin_username, Constant.admin_pwd)
     # admin删除订单
     admin.orders_delete(order_info.get("id"), order_info.get("trainNumber"))
-    # admin删除用户
-    admin.admin_delete_user(query.uid)
+    if init_query is None:  # 如果是新建的用户才删除
+        # admin删除用户
+        admin.admin_delete_user(query.uid)

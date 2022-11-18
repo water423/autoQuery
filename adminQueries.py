@@ -35,7 +35,8 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为新增的车站信息
@@ -59,7 +60,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")  # 用string形式返回
@@ -94,7 +96,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为修改后的车站信息
@@ -121,7 +124,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为删除车站的信息（id + 输入的name + 0）
@@ -165,7 +169,8 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为null（{"status":1,"msg":"Create Success","data":null}）
@@ -187,7 +192,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")  # 用string形式返回
@@ -232,7 +238,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为修改后的联系人信息
@@ -259,7 +266,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为输入的contactId
@@ -300,7 +308,8 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值新增车型的信息，若为新增的车型则返回None,若新增的车型已经存在则返回train的具体信息
@@ -325,7 +334,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")  # 用string形式返回
@@ -364,7 +374,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为true/false
@@ -392,7 +403,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 删除成功 返回值为true
@@ -431,7 +443,8 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值新增配置的信息
@@ -456,7 +469,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")  # 用string形式返回
@@ -493,7 +507,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为修改后的配置信息
@@ -521,7 +536,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 删除成功 返回值被删除的配置信息
@@ -532,7 +548,7 @@ class AdminQuery(Query):
     # prices相关增删改查
     def prices_post(self, train_type: str = "DongCheOne",
                     route_id: str = "f3d4d4ef-693b-4456-8eed-59c0d717dd08", basic_price_rate: float = 0.5,
-                    first_class_price_rate: float = 1, headers: dict = {}) -> str:
+                    first_class_price_rate: float = 1, headers: dict = {}) -> dict:
         """
         添加价格price
         # :param price_id: 新增price的id(不需要输入，在创建时自动生成)
@@ -563,7 +579,8 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值新增配置的信息
@@ -571,7 +588,7 @@ class AdminQuery(Query):
         print(data)
         return data
 
-    def prices_get(self, headers: dict = {}) -> str:
+    def prices_get(self, headers: dict = {}) -> dict:
         """
         获取所有价格信息
         :param headers: 请求头
@@ -588,7 +605,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")  # 用string形式返回
@@ -630,7 +648,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为修改后的price信息
@@ -638,9 +657,7 @@ class AdminQuery(Query):
         print(data)
         return data
 
-    def prices_delete(self, price_id: str, train_type: str = "GaoTie2",
-                      route_id: str = "1367db1f-461e-4ab7-87ad-2bcc05fd9cb7", basic_price_rate: float = 0.5,
-                      first_class_price_rate: float = 1.2, headers: dict = {}) -> str:
+    def prices_delete(self, price_id: str, headers: dict = {}) -> str:
         """
         删除价格price
         :param price_id: price的id(需要输入，用于索引)
@@ -651,29 +668,20 @@ class AdminQuery(Query):
         :param headers: 请求头
         :return
         """
-        logger.info(f"[prices_delete]: train_type:{train_type}")
 
         if headers == {}:
             headers = self.session.headers
         # 请求url
-        url = f"{self.address}/api/v1/adminbasicservice/adminbasic/prices"
-
-        # 请求载荷
-        payload = {
-            "id": price_id,
-            "trainType": train_type,
-            "routeId": route_id,
-            "basicPriceRate": basic_price_rate,
-            "firstClassPriceRate": first_class_price_rate,
-        }
+        url = f"{self.address}/api/v1/adminbasicservice/adminbasic/prices/" + price_id
 
         # 发送请求、获取响应
         # 对于此delete请求而言，如果输入id代表的price不存在会抛出异常
         # {"status":0,"msg":"No that config","data":null}
-        response = self.session.delete(url=url, headers=headers, json=payload)
+        response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 删除成功 返回值被删除的配置信息
@@ -694,7 +702,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         all_route_info = response.json()["data"]
@@ -727,9 +736,9 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
-        logger.info(f"route add success for!")
         return response.json()["data"]
 
     def admin_delete_route(
@@ -747,7 +756,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         logger.info(f"route delete success for routeID {routeId}")
 
@@ -764,7 +774,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         all_user_info = response.json()["data"]
@@ -802,7 +813,8 @@ class AdminQuery(Query):
         response = self.session.post(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         logger.info(f"travel add success for {username}!")
         return response.json()["data"]
@@ -839,7 +851,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         logger.info(f"user add success for {username}!")
 
@@ -859,7 +872,8 @@ class AdminQuery(Query):
 
         # 正常的返回值{"status":1,"msg":"DELETE SUCCESS","data":null} ， data中为null
         if response.status_code != 200:
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         logger.info(f"user delete success for {user_id}!")
 
@@ -876,7 +890,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         all_travel_info = response.json()["data"]
@@ -972,7 +987,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         logger.info(f"travel update success for {trip_id}!")
 
@@ -991,7 +1007,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
         logger.info(f"travel delete success for {trip_id}!")
 
@@ -1069,7 +1086,8 @@ class AdminQuery(Query):
         # "message":"403 null","path":"/api/v1/adminorderservice/adminorder"}
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")
@@ -1094,7 +1112,8 @@ class AdminQuery(Query):
         response = self.session.get(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         data = response.json().get("data")  # 用string形式返回
@@ -1137,7 +1156,8 @@ class AdminQuery(Query):
         response = self.session.put(url=url, headers=headers, json=payload)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为修改后的车站信息
@@ -1168,7 +1188,8 @@ class AdminQuery(Query):
         response = self.session.delete(url=url, headers=headers)
 
         if response.status_code != 200 or response.json().get("data") is None:  # 响应错误则忽略并打印日志
-            logger.warning(f"request for {url} failed. response data is {response.text}")
+            logger.warning(
+                f"Request for {url} failed. Response code is {response.status_code}. Response data is {response.text}")
             return None
 
         # 返回值为删除order的信息
