@@ -362,6 +362,10 @@ def admin_add_route_search(
     # 确保对于每一次查询均是唯一的，若系统中已经存在了此station则在删除之前再次添加均会返回id=None
     if miss_station_name == "guiyangbei":
         miss_station_name = miss_station_name + uuid.uuid1().hex
+        search_id_pair = list(search_id_pair)
+        search_id_pair[1] = miss_station_name
+        search_id_pair = tuple(search_id_pair)
+        # print(search_id_pair)
 
     # 添加缺失的站点
     miss_station_id = query.stations_post(
@@ -372,10 +376,10 @@ def admin_add_route_search(
     # 添加路线,获取route_id
     origin_route_id = search_route2staion(query, list(search_id_pair))
     route_id = query.admin_add_route(
-        search_id_pair[0]+","+search_id_pair[1],
+        search_id_pair[0]+","+miss_station_name,
         "0,500",
         search_id_pair[0],
-        search_id_pair[1]
+        miss_station_name
     )["id"]
     if origin_route_id != "":
         query.admin_delete_route(route_id)
@@ -399,7 +403,7 @@ def admin_add_route_search(
         query_type = "high_speed"
     else:
         query_type = "normal"
-    trip_info = query_left_tickets_successfully(query, query_type, search_name_pair)  # 大写的
+    trip_info = query_left_tickets_successfully(query, query_type, search_id_pair)
     return trip_info, miss_station_id, route_id, travel_id
 
 
