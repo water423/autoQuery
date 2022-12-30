@@ -15,6 +15,9 @@ def preserve_successfully(query: Query = None,
         # 新建用户并登陆or使用特定用户登陆
         query = new_user()
 
+    # 新增parallel查询(仅仅查询，不考虑后续订票操作)
+    query.query_high_speed_ticket_parallel()
+
     # 如何保证对应的查询方式均可以找到余票而不会存在no route的情形:需要使用init中的数据,将查询方式与起点、终点绑定
     # 选择查询的(起点，终点)对
     place_pairs = []
@@ -44,6 +47,9 @@ def preserve_successfully(query: Query = None,
     # 订票并刷新订单
     all_orders_info = preserve_and_refresh(query, trip_info, date, seat_type, types=tuple([0]))  # 返回状态0的订单 not paid
 
+    # 批量创建food order
+    # query.create_food_order_batch()
+
     # 退出并删除用户（不需要在这个里面删除用户，在大场景的结束的时候删除用户）
     return all_orders_info
 
@@ -58,6 +64,9 @@ def normal_routine(query: Query = None):
 
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
     all_orders_info = preserve_successfully(query)
+
+    # 批量创建food order
+    query.create_food_order_batch()
 
     # 异常判断，如果order_info是null，即preserve错误为null
     if all_orders_info is None:
@@ -325,6 +334,10 @@ def consign_and_preserve(query: Query = None):
 
     # 成功预定(query查票 -> preserve -> refresh)，返回所有符合条件的订单（默认为0，1）
     all_orders_info = preserve_successfully(query)
+
+    # 批量创建food order
+    query.create_food_order_batch()
+
     # 选择一个订单作为此次处理的对象，输入的order的状态已经是符合条件的了 preserve_and_refresh的参数types来确定
     order_info = random_from_list(all_orders_info)  # 可能是高铁动车也可能是普通列车
     print(order_info)

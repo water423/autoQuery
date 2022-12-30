@@ -1,6 +1,7 @@
 import requests
 import logging
 import time
+import uuid
 from utils import *
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -195,12 +196,15 @@ class Query:
             headers = self.session.headers
         # 准备请求内容
         url = f"{self.address}/api/v1/travelservice/trips/left_parallel"  # 请求url(travelservice left_parallel)
-        place_pairs = [("Shang Hai", "Su Zhou"),
+        place_pairs = [("Shang Hai", "Su Zhou"),  # place_pairs （起始地，目的地）对，设立多个待选
                        ("Su Zhou", "Shang Hai"),
-                       ("Nan Jing", "Shang Hai")]
+                       ("Nan Jing", "Shang Hai"),
+                       ("Feng Tai", "Cheng Du Dong")
+                       ]
 
         if place_pair == ():
             place_pair = random.choice(place_pairs)
+            print(place_pair)
 
         if time == "":
             time = datestr + " 00:00:00"
@@ -220,6 +224,7 @@ class Query:
             return None
 
         data = response.json().get("data")                          # 响应正确
+        print(data)
 
         # trip_ids = []
         # for d in data:
@@ -856,7 +861,39 @@ class Query:
             logger.warning(
                 f"[query consign by consignee failed] status_code: {r.status_code}. msg: {r.json()['msg']}")
 
+    # 新增：批量创建食物订单
+    def create_food_order_batch(self, headers: dict = {}):
+        if headers == {}:
+            headers = self.session.headers
+            # 准备请求内容
+        url = f"{self.address}/api/v1/foodservice/createOrderBatch"
 
+        food_order_list = []
+        # 随机需要生成多少个order(3 - 6个)
+        order_num = random.randint(3, 7)
+        for i in range(0, order_num):
+            order_id = str(uuid.uuid4())
+            one_food_order = {
+                "orderId": order_id,
+                "foodType": 1,
+                "stationName": "testStation",
+                "storeName": "testStore",
+                "foodName": "testFood",
+                "price": 3.88
+            }
+            print(one_food_order)
+            food_order_list.append(one_food_order)
+
+        print(food_order_list)
+        r = self.session.post(url=url, json=food_order_list, headers=headers)
+        print(r.json())
+        if r.status_code == 200:
+            logger.info(r.text)
+        else:
+            logger.warning(
+                f"Request for {url} failed: status code: {r.status_code}, {r.text}")
+
+        return r.text
 
 
 
